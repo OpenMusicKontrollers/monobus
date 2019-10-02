@@ -1,0 +1,78 @@
+.TH OSC2FTDIMONOBUS "1" "May 22, 2019"
+
+.SH NAME
+osc2ftdimonobus \- an OSC to FTDI-MONOBUS bridge
+
+.SH SYNOPSIS
+.B osc2ftdimonobus
+[\fIOPTIONS\fR]
+
+.SH DESCRIPTION
+\fBosc2ftdimonobus\fP bridges Open Sound Control to an FTDI-based USB MONOBUS adapter.
+
+.SH OPTIONS
+.HP
+\fB\-v\fR
+.IP
+Print version and license information
+
+.HP
+\fB\-h\fR
+.IP
+Print usage information
+
+.HP
+\fB\-d\fR
+.IP
+Enable debug logging
+
+.HP
+\fB\-A\fR
+.IP
+Enable auto-reconnect upon FTDI xmit failure
+
+.HP
+\fB\-V\fR VID
+.IP
+USB vendor ID (0x0403)
+
+.HP
+\fB\-P\fR PID
+.IP
+USB product ID (0x6001)
+
+.HP
+\fB\-D\fR DESCRIPTION
+.IP
+USB product description ((null))
+
+.HP
+\fB\-S\fR SERIAL
+.IP
+USB serial ID ((null))
+
+.HP
+\fB\-F\fR FPS
+.IP
+Frame rate (25)
+
+.HP
+\fB\-U\fR URL
+.IP
+OSC URI (osc.udp://:6666)
+
+.HP
+\fB\-I\fR PRIORITY
+.IP
+Input (OSC) realtime thread priority (0=disabled)
+
+.HP
+\fB\-O\fR PRIORITY
+.IP
+Output (MONOBUS) realtime thread priority (0=disabled)
+
+.SH LICENSE
+Artistic License 2.0.
+
+.SH AUTHOR
+Hanspeter Portner (dev@open-music-kontrollers.ch).
