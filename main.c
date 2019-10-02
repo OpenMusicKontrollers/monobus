@@ -283,7 +283,7 @@ static const payload_led_outset_t led_outset = {
 
 static int outdat = 0;
 
-static const payload_led_outdat_t led_outdat [2] = {
+static const payload_led_outdat_t led_outdat [3] = {
 	[0] = {
 		.unused = 0xff,
 		.len = LENGTH,
@@ -341,6 +341,10 @@ static const payload_led_outdat_t led_outdat [2] = {
 			0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 			0x00,0x00,0x00,0x00
 		}
+	},
+	[2] = {
+		.unused = 0xff,
+		.len = LENGTH
 	}
 };
 
@@ -433,7 +437,7 @@ _ftdi_xmit(app_t *app, const uint8_t *buf, ssize_t sz)
 		goto failure;
 	}
 
-	usleep(1000000 / (3*app->fps)); //FIXME
+	usleep(100000); // give slave 100ms time to reply (half-duplex)
 #else
 	(void)app;
 	(void)buf;
@@ -486,7 +490,7 @@ _ftdi_init(app_t *app)
 		goto failure_close;
 	}
 
-	if(ftdi_set_baudrate(&app->ftdi, 192000) != 0)
+	if(ftdi_set_baudrate(&app->ftdi, 19200) != 0)
 	{
 		goto failure_close;
 	}
@@ -705,6 +709,32 @@ _beat(void *data)
 		{
 			to.tv_sec += 1;
 			to.tv_nsec -= NSECS;
+		}
+	}
+
+	{
+
+		// write MONOBUS data
+		sz = _message(dst, sizeof(dst), COMMAND_LED_OUTSET, id,
+			(const uint8_t *)&led_outset, sizeof(led_outset));
+		if(_ftdi_xmit(app, dst, sz) != 0)
+		{
+			atomic_store(&done, true); // end xmit loop
+		}
+
+		// write MONOBUS data
+		sz = _message(dst, sizeof(dst), COMMAND_LED_OUTDAT, id,
+			(const uint8_t *)&led_outdat[2], sizeof(led_outdat[2]));
+		if(_ftdi_xmit(app, dst, sz) != 0)
+		{
+			atomic_store(&done, true); // end xmit loop
+		}
+
+		// write MONOBUS data
+		sz = _message(dst, sizeof(dst), COMMAND_LED_OUTPUT, id, NULL, 0);
+		if(_ftdi_xmit(app, dst, sz) != 0)
+		{
+			atomic_store(&done, true); // end xmit loop
 		}
 	}
 
