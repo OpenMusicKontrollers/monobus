@@ -432,6 +432,8 @@ _ftdi_xmit(app_t *app, const uint8_t *buf, ssize_t sz)
 	{
 		goto failure;
 	}
+
+	usleep(1000000 / (3*app->fps)); //FIXME
 #else
 	(void)app;
 	(void)buf;
@@ -445,8 +447,6 @@ failure:
 	syslog(LOG_ERR, "[%s] '%s'", __func__, strerror(errno));
 	return 1;
 #endif
-
-	usleep(1000000 / (3*app->fps)); //FIXME
 }
 
 static int
