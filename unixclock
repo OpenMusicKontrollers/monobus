@@ -1,3 +1,44 @@
-#!/bin/sh
+#!/bin/bash
 
-watch -n 1 './txt2pbm "$( printf 0x%08x $(date +%s) )" && build/pbm2osc out.pbm'
+set -e
+set -u
+
+txt2pbm()
+{
+	local pointsize=18
+	local style=b
+	local width=112
+	local height=16
+	local rotation=90
+
+	convert \
+		-size ${width}x${height} \
+		-font "/usr/share/fonts/misc/ter-x${pointsize}${style}.pcf.gz" \
+		-pointsize ${pointsize} \
+		-gravity East \
+		caption:"${1:-MonoBus}" \
+		-rotate ${rotation} \
+		pbm:
+}
+
+export -f txt2pbm
+
+render()
+{
+	local unixtime
+
+	unixtime=$( date +%s )
+
+	txt2pbm "$( printf 0x%08x "${unixtime}" )"
+}
+
+export -f render
+
+animate()
+{
+	render | build/pbm2osc
+}
+
+export -f animate
+
+exec watch -n 1 animate

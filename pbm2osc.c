@@ -133,14 +133,20 @@ main(int argc, char **argv)
 	int width = 0;
 	int height = 0;
 	int format = 0;
+	FILE *fin = stdin;
 
 	pbm_init(&argc, argv);
 
-	FILE *fin = fopen(argv[1], "rb");
+	if(argc > 1)
+	{
+		fin = fopen(argv[1], "rb");
+	}
+
 	if(!fin)
 	{
 		return -1;
 	}
+
 	pbm_readpbminit(fin, &width, &height, &format);
 
 	if( (width != WIDTH) || (height != HEIGHT) )
@@ -150,7 +156,10 @@ main(int argc, char **argv)
 
 	pbm_readpbmrow_packed(fin, app.bitmap, width*height, format);
 
-	fclose(fin);
+	if(fin != stdin)
+	{
+		fclose(fin);
+	}
 
 	app.url = "osc.udp://localhost:7777";
 
