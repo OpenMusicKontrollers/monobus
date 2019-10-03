@@ -16,6 +16,9 @@ incs = [osc_inc, varchunk_inc]
 
 static_link = meson.is_cross_build()
 
+cc = meson.get_compiler('c')
+
+netpbm_dep = cc.find_library('netpbm', static : static_link)
 thread_dep = dependency('threads')
 lv2_dep = dependency('lv2', version : '>=1.14.0')
 ftdi_dep = dependency('libftdi1', version : '>=1.3', static : static_link,
@@ -26,10 +29,16 @@ else
 	add_project_arguments('-DHAVE_LIBFTDI1', language : 'c')
 endif
 
-deps = [thread_dep, lv2_dep, ftdi_dep]
+deps = [netpbm_dep, thread_dep, lv2_dep, ftdi_dep]
 
 executable('osc2ftdimonobus',
 	[ 'main.c', 'osc2ftdimonobus.c' ],
+	include_directories : incs,
+	dependencies : deps,
+	install : true)
+
+executable('pbm2osc',
+	[ 'pbm2osc.c' ],
 	include_directories : incs,
 	dependencies : deps,
 	install : true)

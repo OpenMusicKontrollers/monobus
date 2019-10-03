@@ -28,8 +28,8 @@
 extern "C" {
 #endif
 
-#define WIDTH 112
-#define HEIGHT 16
+#define WIDTH 16
+#define HEIGHT 112
 #define STRIDE (WIDTH / 8)
 #define LENGTH (STRIDE * HEIGHT)
 
