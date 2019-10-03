@@ -17,7 +17,11 @@
 
 #include <syslog.h>
 
-#include <netpbm/pbm.h>
+#if defined(HAVE_NETPBM_SUBDIR)
+#	include <netpbm/pbm.h>
+#else
+#	include <pbm.h>
+#endif
 
 #include <osc.lv2/writer.h>
 #include <osc.lv2/stream.h>

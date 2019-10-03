@@ -30,6 +30,10 @@ else
 	add_project_arguments('-DHAVE_LIBFTDI1', language : 'c')
 endif
 
+if cc.has_header('netpbm/pbm.h')
+	add_project_arguments('-DHAVE_NETPBM_SUBDIR', language : 'c')
+endif
+
 executable('monobusd',
 	[ 'monobusd.c', 'monobus.c' ],
 	include_directories : incs,
