@@ -1,0 +1,3 @@
+#!/bin/sh
+
+watch -n 1 './txt2pbm "$( printf 0x%08x $(date +%s) )" && build/pbm2osc out.pbm'

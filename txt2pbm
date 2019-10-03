@@ -1,0 +1,13 @@
+#!/bin/sh
+
+pointsize=18
+style=b
+
+convert \
+	-size 112x16 \
+	-font "/usr/share/fonts/misc/ter-x${pointsize}${style}.pcf.gz" \
+	-pointsize ${pointsize} \
+	-gravity East \
+	caption:"${1:-PassengerTV}" \
+	-rotate 270 \
+	"${2:-out.pbm}"
