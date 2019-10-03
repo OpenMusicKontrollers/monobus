@@ -19,7 +19,8 @@ static_link = meson.is_cross_build()
 cc = meson.get_compiler('c')
 
 netpbm_dep = cc.find_library('netpbm', static : static_link)
-ncursesw_dep = dependency('ncursesw')
+ncursesw_dep = dependency('ncursesw', static : static_link)
+tinfo_dep= dependency('tinfo', static : static_link)
 thread_dep = dependency('threads')
 lv2_dep = dependency('lv2', version : '>=1.14.0')
 ftdi_dep = dependency('libftdi1', version : '>=1.3', static : static_link,
@@ -37,7 +38,7 @@ endif
 executable('monobusd',
 	[ 'monobusd.c', 'monobus.c' ],
 	include_directories : incs,
-	dependencies : [thread_dep, lv2_dep, ftdi_dep, ncursesw_dep],
+	dependencies : [thread_dep, lv2_dep, ftdi_dep, ncursesw_dep, tinfo_dep],
 	install : true)
 
 executable('monobusc',
