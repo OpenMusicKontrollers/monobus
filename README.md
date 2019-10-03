@@ -89,6 +89,17 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 		-U osc.udp://localhost:7777   # OSC server URI
 		bitmap.pbm
 
+#### Control monobusd with your favorite OSC client
+
+
+##### **/monobus b BITMAP-DATA**
+
+To set the bitmap, send your OSC messages to given OSC path with
+**b**lob argument being your bitmap data in PBM payload format.
+
+	# set bitmap
+	oscsend osc.udp://localhost:7777 /monobus b 224 ...
+
 ### License
 
 Copyright (c) 2019 Hanspeter Portner (dev@open-music-kontrollers.ch)
