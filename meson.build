@@ -19,6 +19,7 @@ static_link = meson.is_cross_build()
 cc = meson.get_compiler('c')
 
 netpbm_dep = cc.find_library('netpbm', static : static_link)
+ncursesw_dep = dependency('ncursesw')
 thread_dep = dependency('threads')
 lv2_dep = dependency('lv2', version : '>=1.14.0')
 ftdi_dep = dependency('libftdi1', version : '>=1.3', static : static_link,
@@ -29,18 +30,16 @@ else
 	add_project_arguments('-DHAVE_LIBFTDI1', language : 'c')
 endif
 
-deps = [netpbm_dep, thread_dep, lv2_dep, ftdi_dep]
-
 executable('osc2ftdimonobus',
 	[ 'main.c', 'osc2ftdimonobus.c' ],
 	include_directories : incs,
-	dependencies : deps,
+	dependencies : [thread_dep, lv2_dep, ftdi_dep, ncursesw_dep],
 	install : true)
 
 executable('pbm2osc',
 	[ 'pbm2osc.c' ],
 	include_directories : incs,
-	dependencies : deps,
+	dependencies : [lv2_dep, netpbm_dep],
 	install : true)
 
 configure_file(
@@ -53,7 +52,7 @@ install_man(join_paths(meson.current_build_dir(), 'osc2ftdimonobus.1'))
 test_osc2ftdimonobus = executable('test_osc2ftdimonobus',
 	[ 'test.c', 'osc2ftdimonobus.c' ],
 	include_directories : incs,
-	dependencies : deps,
+	dependencies : [lv2_dep],
 	install : false)
 
 test('Test', test_osc2ftdimonobus)

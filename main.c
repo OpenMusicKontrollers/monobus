@@ -23,6 +23,8 @@
 #include <signal.h>
 #include <pthread.h>
 #include <stdatomic.h>
+#include <ncurses.h>
+#include <locale.h>
 
 #ifdef HAVE_LIBFTDI1
 #	include <libftdi1/ftdi.h>
@@ -39,8 +41,6 @@
 #define FT232_PID  0x6001
 #define NSECS      1000000000
 #define JAN_1970   2208988800ULL
-
-//#define FTDI_SKIP
 
 typedef struct _sched_t sched_t;
 typedef struct _app_t app_t;
@@ -59,6 +59,7 @@ struct _app_t {
 	const char *des;
 	uint32_t fps;
 	const char *url;
+	bool simulate;
 
 	LV2_OSC_Stream stream;
 	pthread_t thread;
@@ -367,32 +368,33 @@ _message(uint8_t *dst, size_t dst_len, uint8_t command, uint8_t id,
 static int
 _ftdi_xmit(app_t *app, const uint8_t *buf, ssize_t sz)
 {
-#if !defined(FTDI_SKIP)
+	if(app->simulate)
+	{
+		return 0;
+	}
+
 	if(ftdi_write_data(&app->ftdi, buf, sz) != sz)
 	{
 		goto failure;
 	}
 
 	usleep(100000); // give slave 100ms time to reply (half-duplex)
-#else
-	(void)app;
-	(void)buf;
-	(void)sz;
-#endif
 
 	return 0;
 
-#if !defined(FTDI_SKIP)
 failure:
 	syslog(LOG_ERR, "[%s] '%s'", __func__, strerror(errno));
 	return 1;
-#endif
 }
 
 static int
 _ftdi_init(app_t *app)
 {
-#if !defined(FTDI_SKIP)
+	if(app->simulate)
+	{
+		return 0;
+	}
+
 	app->ftdi.module_detach_mode = AUTO_DETACH_SIO_MODULE;
 
 	if(ftdi_init(&app->ftdi) != 0)
@@ -450,13 +452,9 @@ _ftdi_init(app_t *app)
 	{
 		goto failure_close;
 	}
-#else
-	(void)app;
-#endif
 
 	return 0;
 
-#if !defined(FTDI_SKIP)
 failure_close:
 	ftdi_usb_close(&app->ftdi);
 
@@ -466,22 +464,22 @@ failure_deinit:
 failure:
 	syslog(LOG_ERR, "[%s] '%s'", __func__, strerror(errno));
 	return -1;
-#endif
 }
 
 static void
 _ftdi_deinit(app_t *app)
 {
-#if !defined(FTDI_SKIP)
+	if(app->simulate)
+	{
+		return;
+	}
+
 	if(ftdi_usb_close(&app->ftdi) != 0)
 	{
 		syslog(LOG_ERR, "[%s] '%s'", __func__, strerror(errno));
 	}
 
 	ftdi_deinit(&app->ftdi);
-#else
-	(void)app;
-#endif
 }
 
 static void
@@ -549,34 +547,58 @@ _thread_priority(int priority)
 }
 
 static void
-_dump_bitmap(state_t *state)
+_dump_bitmap(app_t *app)
 {
+	state_t *state = &app->state;
+
+	if(!app->simulate)
+	{
+		return;
+	}
+
+	clear();
+
+#define MUL 2
+	WINDOW *win = newwin(WIDTH + 2, HEIGHT*MUL + 2 + 1, 0, 0);
+
+	if(has_colors())
+	{
+		wattron(win, COLOR_PAIR(1));
+	}
+
+	box(win, 0, 0);
+
+	if(has_colors())
+	{
+		wattroff(win, COLOR_PAIR(1));
+	}
+
+	if(has_colors())
+	{
+		wattron(win, COLOR_PAIR(2));
+	}
+
 	for(unsigned y = 0; y < HEIGHT; y++)
 	{
-		fprintf(stdout, "-");
-	}
-	fprintf(stdout, "\n");
+		const unsigned row_offset = y*STRIDE;
 
-	for(unsigned x = 0; x < WIDTH; x++)
-	{
-		for(unsigned y = 0; y < HEIGHT; y++)
+		for(unsigned x = 0; x < WIDTH; x++)
 		{
-			const unsigned row_offset = y * STRIDE;
-			const unsigned stride_offset = x / STRIDE;
-			const uint8_t byte = state->bitmap[row_offset + stride_offset];
-			const unsigned mask_offset = (x - stride_offset*STRIDE);
-			const uint8_t mask = (1 << mask_offset);
+			const unsigned col_offset = STRIDE - (x / 8) - 1;
+			const uint8_t byte = state->bitmap[row_offset + col_offset];
+			const uint8_t mask = 1 << (x % 8);
 
-			fprintf(stdout, "%c", byte & mask ? 'O' : ' ');
+			mvwprintw(win, x + 1, y*MUL + 1, byte & mask ? " ●" : "  ");
 		}
-		fprintf(stdout, "\n");
 	}
 
-	for(unsigned y = 0; y < HEIGHT; y++)
+	if(has_colors())
 	{
-		fprintf(stdout, "-");
+		wattroff(win, COLOR_PAIR(2));
 	}
-	fprintf(stdout, "\n");
+
+	wrefresh(win);
+	delwin(win);
 }
 
 static void *
@@ -653,9 +675,7 @@ _beat(void *data)
 			atomic_store(&done, true); // end xmit loop
 		}
 
-#if 0
-		_dump_bitmap(state);
-#endif
+		_dump_bitmap(app);
 
 		// copy bitmap to outdat
 		memcpy(led_outdat.bitmap, state->bitmap, LENGTH);
@@ -819,6 +839,7 @@ _usage(char **argv, app_t *app)
 		"   [-h]                     print usage information\n"
 		"   [-d]                     enable verbose logging\n"
 		"   [-A]                     enable auto-reconnect (disabled)\n"
+		"   [-T]                     run test simulation (disabled)\n"
 		"   [-V] VID                 USB vendor ID (0x%04"PRIx16")\n"
 		"   [-P] PID                 USB product ID (0x%04"PRIx16")\n"
 		"   [-D] DESCRIPTION         USB product name (%s)\n"
@@ -855,7 +876,7 @@ main(int argc, char **argv)
 		argv[0]);
 
 	int c;
-	while( (c = getopt(argc, argv, "vhdAV:P:D:S:F:U:I:O:") ) != -1)
+	while( (c = getopt(argc, argv, "vhdATV:P:D:S:F:U:I:O:") ) != -1)
 	{
 		switch(c)
 		{
@@ -875,7 +896,10 @@ main(int argc, char **argv)
 			{
 				atomic_store(&reconnect, true);
 			}	break;
-
+			case 'T':
+			{
+				app.simulate = true;
+			}	break;
 
 			case 'V':
 			{
@@ -942,6 +966,22 @@ main(int argc, char **argv)
 	openlog(NULL, LOG_PERROR, LOG_DAEMON);
 	setlogmask(LOG_UPTO(logp));
 
+	if(app.simulate)
+	{
+		setlocale(LC_ALL, "");
+		initscr();
+
+		noecho(); // don't echo eny keypresses
+		curs_set(false); // hide cursor
+
+		if(has_colors())
+		{
+			start_color();
+			init_pair(1, COLOR_WHITE, COLOR_BLACK);
+			init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+		}
+	}
+
 	int ret = _loop(&app);
 
 	while(atomic_load(&reconnect))
@@ -950,6 +990,11 @@ main(int argc, char **argv)
 		sleep(1);
 
 		ret = _loop(&app);
+	}
+
+	if(app.simulate)
+	{
+		endwin();
 	}
 
 	return ret;

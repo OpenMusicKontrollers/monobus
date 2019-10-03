@@ -9,5 +9,5 @@ convert \
 	-pointsize ${pointsize} \
 	-gravity East \
 	caption:"${1:-PassengerTV}" \
-	-rotate 270 \
+	-rotate 90\
 	"${2:-out.pbm}"
