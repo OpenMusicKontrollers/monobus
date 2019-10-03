@@ -62,7 +62,7 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 	[user@machine ~] dmesg
 	[  132.718684] usb 1-1.4: New USB device found, idVendor=0403, idProduct=6001, bcdDevice= 6.00
 	[  132.718689] usb 1-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-	[  132.718691] usb 1-1.4: Product: FT232r USB UART
+	[  132.718691] usb 1-1.4: Product: FT232R USB UART
 	[  132.718693] usb 1-1.4: Manufacturer: FTDI
 	[  132.718695] usb 1-1.4: SerialNumber: ABCXYZ
 
@@ -87,7 +87,7 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 
 	monobusc \
 		-U osc.udp://localhost:7777   # OSC server URI
-		bitmap.pbm
+		-I bitmap.pbm                 # Bitmap in PBM format
 
 #### Control monobusd with your favorite OSC client
 
