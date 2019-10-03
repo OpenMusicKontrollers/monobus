@@ -5,10 +5,11 @@ monobusc \- an OSC to Lawo MonoBus bridge client application
 
 .SH SYNOPSIS
 .B monobusc
-[\fIOPTIONS\fR] \fIFILE.PBM\fR
+[\fIOPTIONS\fR]
 
 .SH DESCRIPTION
 \fBmonobusc\fP sends bitmap data via OSC to the monobus daemon application.
+Reads from stdin by default.
 
 .SH OPTIONS
 .HP
@@ -29,7 +30,12 @@ Enable debug logging
 .HP
 \fB\-U\fR URL
 .IP
-OSC URI (osc.udp://:6666)
+OSC URI (osc.udp://localhost:7777)
+
+.HP
+\fB\-I\fR FILE
+.IP
+Bitmap file in PBM format (-)
 
 .SH LICENSE
 Artistic License 2.0.

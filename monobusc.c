@@ -29,6 +29,7 @@ typedef struct _app_t app_t;
 
 struct _app_t {
 	const char *url;
+	const char *path;
 
 	LV2_OSC_Stream stream;
 
@@ -123,34 +124,132 @@ failure:
 	return -1;
 }
 
+static void
+_version(void)
+{
+	fprintf(stderr,
+		"--------------------------------------------------------------------\n"
+		"This is free software: you can redistribute it and/or modify\n"
+		"it under the terms of the Artistic License 2.0 as published by\n"
+		"The Perl Foundation.\n"
+		"\n"
+		"This source is distributed in the hope that it will be useful,\n"
+		"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+		"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n"
+		"Artistic License 2.0 for more details.\n"
+		"\n"
+		"You should have received a copy of the Artistic License 2.0\n"
+		"along the source as a COPYING file. If not, obtain it from\n"
+		"http://www.perlfoundation.org/artistic_license_2_0.\n\n");
+}
+
+static void
+_usage(char **argv, app_t *app)
+{
+	fprintf(stderr,
+		"--------------------------------------------------------------------\n"
+		"USAGE\n"
+		"   %s [OPTIONS] FILE.PBM|-\n"
+		"\n"
+		"OPTIONS\n"
+		"   [-v]                     print version information\n"
+		"   [-h]                     print usage information\n"
+		"   [-d]                     enable verbose logging\n"
+		"   [-U] URI                 OSC URI (%s)\n"
+		"   [-I] FILE                Bitmap in PBM format (%s)\n"
+		, argv[0], app->url, app->path);
+}
+
 int
 main(int argc, char **argv)
 {
 	(void)lv2_osc_stream_pollin; //FIXME
 	(void)lv2_osc_hooks; //FIXME
-
 	static app_t app;
+	int logp = LOG_INFO;
+
+	app.url = "osc.udp://localhost:7777";
+	app.path = "-";
+
 	int width = 0;
 	int height = 0;
 	int format = 0;
 	FILE *fin = stdin;
 
-	pbm_init(&argc, argv);
+	fprintf(stderr,
+		"%s "MONOBUS_VERSION"\n"
+		"Copyright (c) 2019 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
+		"Released under Artistic License 2.0 by Open Music Kontrollers\n",
+		argv[0]);
 
-	if(argc > 1)
+	int c;
+	while( (c = getopt(argc, argv, "vhdU:I:") ) != -1)
 	{
-		fin = fopen(argv[1], "rb");
+		switch(c)
+		{
+			case 'v':
+			{
+				_version();
+			}	return 0;
+			case 'h':
+			{
+				_usage(argv, &app);
+			}	return 0;
+			case 'd':
+			{
+				logp = LOG_DEBUG;
+			}	break;
+			case 'U':
+			{
+				app.url = optarg;
+			} break;
+			case 'I':
+			{
+				app.path = optarg;
+			} break;
+
+			case '?':
+			{
+				if( (optopt == 'U') || (optopt == 'I') )
+				{
+					fprintf(stderr, "Option `-%c' requires an argument.\n", optopt);
+				}
+				else if(isprint(optopt))
+				{
+					fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+				}
+				else
+				{
+					fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+				}
+			}	return -1;
+			default:
+			{
+				// nothing
+			}	return -1;
+		}
+	}
+
+	openlog(NULL, LOG_PERROR, LOG_DAEMON);
+	setlogmask(LOG_UPTO(logp));
+
+	if(strcmp(app.path, "-"))
+	{
+		fin = fopen(app.path, "rb");
 	}
 
 	if(!fin)
 	{
+		syslog(LOG_ERR, "[%s] '%s'", __func__, strerror(errno));
 		return -1;
 	}
 
+	pbm_init(&argc, argv);
 	pbm_readpbminit(fin, &width, &height, &format);
 
 	if( (width != WIDTH) || (height != HEIGHT) )
 	{
+		syslog(LOG_ERR, "[%s] 'width or height invalid'", __func__);
 		return -1;
 	}
 
@@ -161,12 +260,6 @@ main(int argc, char **argv)
 		fclose(fin);
 	}
 
-	app.url = "osc.udp://localhost:7777";
-
-	int logp = LOG_DEBUG;
-	openlog(NULL, LOG_PERROR, LOG_DAEMON);
-	setlogmask(LOG_UPTO(logp));
-
 	if(_osc_init(&app) == -1)
 	{
 		return -1;
@@ -174,41 +267,41 @@ main(int argc, char **argv)
 
 	size_t sz = 0;
 	uint8_t *buf = varchunk_write_request_max(app.rb.tx, 1024, &sz);
-	if(buf)
-	{
-		LV2_OSC_Writer writer;
-		size_t written;
-
-		lv2_osc_writer_initialize(&writer, buf, sz);
-
-		const int32_t len = LENGTH;
-		if(lv2_osc_writer_message_vararg(&writer, "/monobus", "b", len, app.bitmap))
-		{
-			if(lv2_osc_writer_finalize(&writer, &written))
-			{
-				varchunk_write_advance(app.rb.tx, written);
-
-				while( (lv2_osc_stream_run(&app.stream) & LV2_OSC_SEND) != LV2_OSC_SEND)
-				{
-					usleep(1000);
-				}
-			}
-			else
-			{
-				syslog(LOG_ERR, "lv2_osc_writer_finalize");
-			}
-		}
-		else
-		{
-			syslog(LOG_ERR, "lv2_osc_writer_message_vararg");
-		}
-	}
-	else
+	if(!buf)
 	{
 		syslog(LOG_ERR, "varchunk_write_request_max");
+		goto failure;
+	}
+
+	LV2_OSC_Writer writer;
+	size_t written;
+
+	lv2_osc_writer_initialize(&writer, buf, sz);
+
+	const int32_t len = LENGTH;
+	if(!lv2_osc_writer_message_vararg(&writer, "/monobus", "b", len, app.bitmap))
+	{
+		syslog(LOG_ERR, "lv2_osc_writer_message_vararg");
+		goto failure;
+	}
+
+	if(!lv2_osc_writer_finalize(&writer, &written))
+	{
+		syslog(LOG_ERR, "lv2_osc_writer_finalize");
+		goto failure;
+	}
+
+	varchunk_write_advance(app.rb.tx, written);
+
+	while( (lv2_osc_stream_run(&app.stream) & LV2_OSC_SEND) != LV2_OSC_SEND)
+	{
+		usleep(1000);
 	}
 
 	_osc_deinit(&app);
-
 	return 0;
+
+failure:
+		_osc_deinit(&app);
+		return -1;
 }

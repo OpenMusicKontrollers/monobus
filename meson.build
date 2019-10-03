@@ -7,7 +7,7 @@ project('monobus', 'c', default_options : [
 
 version = run_command('cat', 'VERSION').stdout().strip()
 
-add_project_arguments('-DOSC2FTDIMONOBUS_VERSION="'+version+'"', language : 'c')
+add_project_arguments('-DMONOBUS_VERSION="'+version+'"', language : 'c')
 add_project_arguments('-D_GNU_SOURCE', language : 'c')
 
 osc_inc = include_directories('osc.lv2')

@@ -868,9 +868,8 @@ main(int argc, char **argv)
 	app.priority.inp = 0;
 	app.priority.out = 0;
 
-
 	fprintf(stderr,
-		"%s "OSC2FTDIMONOBUS_VERSION"\n"
+		"%s "MONOBUS_VERSION"\n"
 		"Copyright (c) 2019 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
 		"Released under Artistic License 2.0 by Open Music Kontrollers\n",
 		argv[0]);
