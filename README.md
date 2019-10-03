@@ -2,7 +2,7 @@
 
 ### OSC to Lawo MonoBus bridge
 
-Control your Lawo MonoBus devices via an OSC server that talks to FTDI USB adapters..
+Control your Lawo MonoBus devices via an OSC server that talks to FTDI USB adapters.
 
 #### Build status
 
@@ -56,6 +56,15 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 	sudo ninja install
 
 ### Usage
+
+#### Discover your type of FTDI-DMX device via e.g. dmesg when plugging it in
+
+	[user@machine ~] dmesg
+	[  132.718684] usb 1-1.4: New USB device found, idVendor=0403, idProduct=6001, bcdDevice= 6.00
+	[  132.718689] usb 1-1.4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+	[  132.718691] usb 1-1.4: Product: FT232r USB UART
+	[  132.718693] usb 1-1.4: Manufacturer: FTDI
+	[  132.718695] usb 1-1.4: SerialNumber: ABCXYZ
 
 #### Run monobus daemon with the information gathered above
 
