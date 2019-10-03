@@ -18,7 +18,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include <osc2ftdimonobus.h>
+#include <monobus.h>
 
 static void
 _test_parse()

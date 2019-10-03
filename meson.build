@@ -1,4 +1,4 @@
-project('osc2ftdimonobus', 'c', default_options : [
+project('monobus', 'c', default_options : [
 	'buildtype=release',
 	'warning_level=3',
 	'werror=false',
@@ -30,29 +30,35 @@ else
 	add_project_arguments('-DHAVE_LIBFTDI1', language : 'c')
 endif
 
-executable('osc2ftdimonobus',
-	[ 'main.c', 'osc2ftdimonobus.c' ],
+executable('monobusd',
+	[ 'monobusd.c', 'monobus.c' ],
 	include_directories : incs,
 	dependencies : [thread_dep, lv2_dep, ftdi_dep, ncursesw_dep],
 	install : true)
 
-executable('pbm2osc',
-	[ 'pbm2osc.c' ],
+executable('monobusc',
+	[ 'monobusc.c' ],
 	include_directories : incs,
 	dependencies : [lv2_dep, netpbm_dep],
 	install : true)
 
-configure_file(
-	input : 'osc2ftdimonobus.1',
-	output : 'osc2ftdimonobus.1',
+monobusd_man = configure_file(
+	input : 'monobusd.1',
+	output : 'monobusd.1',
 	copy : true)
 
-install_man(join_paths(meson.current_build_dir(), 'osc2ftdimonobus.1'))
+monobusc_man = configure_file(
+	input : 'monobusc.1',
+	output : 'monobusc.1',
+	copy : true)
 
-test_osc2ftdimonobus = executable('test_osc2ftdimonobus',
-	[ 'test.c', 'osc2ftdimonobus.c' ],
+install_man(monobusd_man)
+install_man(monobusc_man)
+
+monobus_test = executable('monobus_test',
+	[ 'monobus_test.c', 'monobus.c' ],
 	include_directories : incs,
 	dependencies : [lv2_dep],
 	install : false)
 
-test('Test', test_osc2ftdimonobus)
+test('Test', monobus_test)

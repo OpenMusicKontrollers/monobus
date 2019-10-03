@@ -23,7 +23,7 @@
 #include <osc.lv2/stream.h>
 
 #include <varchunk.h>
-#include <osc2ftdimonobus.h>
+#include <monobus.h>
 
 typedef struct _app_t app_t;
 

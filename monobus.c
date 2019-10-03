@@ -15,7 +15,7 @@
  * http://www.perlfoundation.org/artistic_license_2_0.
  */
 
-#include <osc2ftdimonobus.h>
+#include <monobus.h>
 
 static void
 _root(LV2_OSC_Reader *reader, LV2_OSC_Arg *arg,

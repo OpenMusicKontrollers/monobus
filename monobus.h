@@ -15,8 +15,8 @@
  * http://www.perlfoundation.org/artistic_license_2_0.
  */
 
-#ifndef _OSC2FTDIMONOBUS_H
-#define _OSC2FTDIMONOBUS_H
+#ifndef _MONOBUS_H
+#define _MONOBUS_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -45,4 +45,4 @@ extern const LV2_OSC_Tree tree_root [];
 }
 #endif
 
-#endif //_OSC2FTDIMONOBUS_H
+#endif //_MONOBUS_H

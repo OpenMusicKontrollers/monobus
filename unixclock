@@ -36,7 +36,7 @@ export -f render
 
 animate()
 {
-	render | build/pbm2osc
+	render | monobusc
 }
 
 export -f animate

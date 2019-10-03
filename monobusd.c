@@ -35,7 +35,7 @@
 #include <osc.lv2/stream.h>
 
 #include <varchunk.h>
-#include <osc2ftdimonobus.h>
+#include <monobus.h>
 
 #define FTDI_VID   0x0403
 #define FT232_PID  0x6001

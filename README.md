@@ -1,12 +1,12 @@
-## osc2ftdimonobus
+## monobus
 
-### OSC to FTDI MONOBUS bridge
+### OSC to Lawo MonoBus bridge
 
-Control your LAWO MONOBUS devices via an OSC server that talks to FTDI USB adapters..
+Control your Lawo MonoBus devices via an OSC server that talks to FTDI USB adapters..
 
 #### Build status
 
-[![build status](https://gitlab.com/OpenMusicKontrollers/osc2ftdimonobus/badges/master/build.svg)](https://gitlab.com/OpenMusicKontrollers/osc2ftdimonobus/commits/master)
+[![build status](https://gitlab.com/OpenMusicKontrollers/monobus/badges/master/build.svg)](https://gitlab.com/OpenMusicKontrollers/monobus/commits/master)
 
 ### Binaries
 
@@ -15,39 +15,41 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 <!--
 #### Stable release
 
-* [osc2ftdimonobus-0.2.0.zip](https://dl.open-music-kontrollers.ch/osc2ftdimonobus/stable/osc2ftdimonobus-0.2.0.zip) ([sig](https://dl.open-music-kontrollers.ch/osc2ftdimonobus/stable/osc2ftdimonobus-0.2.0.zip.sig))
+* [monobus-0.2.0.zip](https://dl.open-music-kontrollers.ch/monobus/stable/monobus-0.2.0.zip) ([sig](https://dl.open-music-kontrollers.ch/monobus/stable/monobus-0.2.0.zip.sig))
 -->
 
 #### Unstable (nightly) release
 
-* [osc2ftdimonobus-latest-unstable.zip](https://dl.open-music-kontrollers.ch/osc2ftdimonobus/unstable/osc2ftdimonobus-latest-unstable.zip) ([sig](https://dl.open-music-kontrollers.ch/osc2ftdimonobus/unstable/osc2ftdimonobus-latest-unstable.zip.sig))
+* [monobus-latest-unstable.zip](https://dl.open-music-kontrollers.ch/monobus/unstable/monobus-latest-unstable.zip) ([sig](https://dl.open-music-kontrollers.ch/monobus/unstable/monobus-latest-unstable.zip.sig))
 
 ### Sources
 
 <!--
 #### Stable release
 
-* [osc2ftdimonobus-0.2.0.tar.xz](https://git.open-music-kontrollers.ch/lad/osc2ftdimonobus/snapshot/osc2ftdimonobus-0.2.0.tar.xz)
+* [monobus-0.2.0.tar.xz](https://git.open-music-kontrollers.ch/gfx/monobus/snapshot/monobus-0.2.0.tar.xz)
 -->
 
 #### Git repository
 
-* <https://git.open-music-kontrollers.ch/lad/osc2ftdimonobus>
+* <https://git.open-music-kontrollers.ch/mix/monobus>
 
 ### Bugs and feature requests
 
-* [Gitlab](https://gitlab.com/OpenMusicKontrollers/osc2ftdimonobus)
-* [Github](https://github.com/OpenMusicKontrollers/osc2ftdimonobus)
+* [Gitlab](https://gitlab.com/OpenMusicKontrollers/monobus)
+* [Github](https://github.com/OpenMusicKontrollers/monobus)
 
 ### Dependencies
 
 * [LV2](http://lv2plug.in/) (LV2 Plugin Standard)
 * [libftdi](https://www.intra2net.com/en/developer/libftdi/index.php) (Library to talk to FTDI chips)
+* [netpbm](http://netpbm.sourceforge.net/) (Toolkit for manipulation of graphic images)
+* [ncurses](https://www.gnu.org/software/ncurses/) (Free software emulation of curses)
 
 ### Build / install
 
-	git clone https://git.open-music-kontrollers.ch/lad/osc2ftdimonobus
-	cd osc2ftdimonobus
+	git clone https://git.open-music-kontrollers.ch/gfx/monobus
+	cd monobus
 	meson build
 	cd build
 	ninja
@@ -55,15 +57,28 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 
 ### Usage
 
-#### Run osc2ftdimonobus with the information gathered above
+#### Run monobus daemon with the information gathered above
 
-	osc2ftdimonobus \
+	monobusd \
 		-V 0x0403 \                   # USB idVendor
 		-P 0x6001 \                   # USB idProduct
-		-D 'FTDI-232' \               # USB product description
+		-D 'FT232R USB UART' \        # USB product description
 		-S ABCXYZ \                   # USB product serial number
 		-F 2 \                        # update rate in frames per second
-		-U osc.udp://:6666            # OSC server URI
+		-U osc.udp://:7777            # OSC server URI
+
+#### Run monobus daemon in testing, aka simulation mode with ncurses output
+
+	monobusd \
+		-T \                          # enable testing mode
+		-F 2 \                        # update rate in frames per second
+		-U osc.udp://:7777            # OSC server URI
+
+#### Run monobus client with a 16x112 pixel pbm image
+
+	monobusc \
+		-U osc.udp://localhost:7777   # OSC server URI
+		bitmap.pbm
 
 ### License
 
