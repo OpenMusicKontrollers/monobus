@@ -36,6 +36,8 @@ struct _app_t {
 		varchunk_t *rx;
 		varchunk_t *tx;
 	} rb;
+
+	uint8_t bitmap [LENGTH];
 };
 
 static void *
@@ -122,7 +124,7 @@ failure:
 }
 
 int
-main(int argc __attribute__((unused)), char **argv __attribute__((unused)))
+main(int argc, char **argv)
 {
 	(void)lv2_osc_stream_pollin; //FIXME
 	(void)lv2_osc_hooks; //FIXME
@@ -130,19 +132,25 @@ main(int argc __attribute__((unused)), char **argv __attribute__((unused)))
 	static app_t app;
 	int width = 0;
 	int height = 0;
+	int format = 0;
+
+	pbm_init(&argc, argv);
 
 	FILE *fin = fopen(argv[1], "rb");
 	if(!fin)
 	{
 		return -1;
 	}
-	bit **bitmap = pbm_readpbm(fin, &width, &height);
-	fclose(fin);
+	pbm_readpbminit(fin, &width, &height, &format);
 
 	if( (width != WIDTH) || (height != HEIGHT) )
 	{
 		return -1;
 	}
+
+	pbm_readpbmrow_packed(fin, app.bitmap, width*height, format);
+
+	fclose(fin);
 
 	app.url = "osc.udp://localhost:7777";
 
@@ -165,7 +173,7 @@ main(int argc __attribute__((unused)), char **argv __attribute__((unused)))
 		lv2_osc_writer_initialize(&writer, buf, sz);
 
 		const int32_t len = LENGTH;
-		if(lv2_osc_writer_message_vararg(&writer, "/monobus", "b", len, bitmap))
+		if(lv2_osc_writer_message_vararg(&writer, "/monobus", "b", len, app.bitmap))
 		{
 			if(lv2_osc_writer_finalize(&writer, &written))
 			{
@@ -192,8 +200,6 @@ main(int argc __attribute__((unused)), char **argv __attribute__((unused)))
 	}
 
 	_osc_deinit(&app);
-
-	free(bitmap);
 
 	return 0;
 }
