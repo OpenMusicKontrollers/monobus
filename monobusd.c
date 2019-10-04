@@ -491,6 +491,8 @@ _beat(void *data)
 
 	struct timespec to;
 	clock_gettime(CLOCK_REALTIME, &to);
+	to.tv_sec += 1;
+	to.tv_nsec = 0;
 
 	// write MONOBUS data
 	sz = monobus_message(dst, sizeof(dst), COMMAND_STATUS, id, NULL, 0);
