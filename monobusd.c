@@ -214,151 +214,42 @@ _handle_osc_packet(app_t *app, uint64_t timetag, const uint8_t *buf, size_t len)
 	}
 }
 
-typedef enum _command_type_t {
-	COMMAND_STATUS = 0x80,
-	COMMAND_LED_SETUP  = 0xb0,
-	COMMAND_LED_OUTSET = 0xc0,
-	COMMAND_LED_OUTDAT = 0xd0,
-	COMMAND_LED_OUTPUT = 0xe0
-} command_type_t;
-
-typedef struct _payload_led_setup_t payload_led_setup_t;
-typedef struct _payload_led_outset_t payload_led_outset_t;
-typedef struct _payload_led_outdat_t payload_led_outdat_t;
-
-struct _payload_led_setup_t {
-	uint8_t data [17];
-} __attribute__((packed));
-
-struct _payload_led_outset_t {
-	uint8_t data [8];
-} __attribute__((packed));
-
-struct _payload_led_outdat_t {
-	uint8_t unused;
-	uint8_t len;
-	uint8_t bitmap [LENGTH];
-} __attribute__((packed));
-
 static const payload_led_setup_t led_setup = {
-	.data = {
-		0x00,
-		0xff,
-		0x2f,
-		0x10,
-		0x20,
-		0x40,
-		0x60,
-		0x90,
-		0xc0,
-		0xf0,
-		0x03,
-		0x13,
-		0x33,
-		0x53,
-		0x83,
-		0xb3,
-		0xe3
-	}
+	.unknown_00 = 0x00,
+	.unknown_01 = 0xff,
+	.unknown_02 = 0x2f,
+	.unknown_03 = 0x10,
+	.unknown_04 = 0x20,
+	.unknown_05 = 0x40,
+	.unknown_06 = 0x60,
+	.unknown_07 = 0x90,
+	.unknown_08 = 0xc0,
+	.unknown_09 = 0xf0,
+	.unknown_0a = 0x03,
+	.unknown_0b = 0x13,
+	.unknown_0c = 0x33,
+	.unknown_0d = 0x53,
+	.unknown_0e = 0x83,
+	.unknown_0f = 0xb3,
+	.unknown_10 = 0xe3
 };
 
 static const payload_led_outset_t led_outset = {
-	.data = {
-		0x01,
-		0x00,
-		0x00,
-		0x00,
-		0x00,
-		0x00,
-		LENGTH,
-		0x07
-	}
+	.unknown_00 = 0x01,
+	.unknown_01 = 0x00,
+	.unknown_02 = 0x00,
+	.unknown_03 = 0x00,
+	.unknown_04 = 0x00,
+	.unknown_05 = 0x00,
+	.len = LENGTH,
+	.unknown_07 = 0x07
 };
 
 static payload_led_outdat_t led_outdat = {
-	.unused = 0xff,
-	.len = LENGTH
+	.unknown_00 = 0xff,
+	.len = LENGTH,
+	.bitmap = { 0x0 }
 };
-
-#define FRAMING 0x7e
-#define ESCAPE 0x7d
-
-static uint8_t
-_crc8(uint8_t seed, const uint8_t *data, size_t len)
-{
-	uint8_t crc = ~seed;
-
-	for(size_t i = 0; i < len; i++)
-	{
-		crc ^= data[i];
-	}
-
-	return ~crc;
-}
-
-static ssize_t
-_message(uint8_t *dst, size_t dst_len, uint8_t command, uint8_t id,
-	const uint8_t *src, size_t src_len)
-{
-	(void)dst_len; //FIXME
-	uint8_t *ptr = dst;
-
-	*ptr++ = FRAMING;
-
-	*ptr++ = command | id;
-
-	for(size_t i = 0; i < src_len; i++)
-	{
-		const uint8_t byt = src[i];
-
-		switch(byt)
-		{
-			case FRAMING:
-			{
-				*ptr++ = ESCAPE;
-				*ptr++ = byt ^ 0x20;
-			} break;
-			case ESCAPE:
-			{
-				*ptr++ = ESCAPE;
-				*ptr++ = byt ^ 0x20;
-			} break;
-			default:
-			{
-				*ptr++ = byt;
-			} break;
-		}
-	}
-
-	{
-		const size_t len = ptr - &dst[1];
-		const uint8_t crc = _crc8(0xff, &dst[1], len);
-
-		switch(crc)
-		{
-			case FRAMING:
-			{
-				*ptr++ = ESCAPE;
-				*ptr++ = crc ^ 0x20;
-			} break;
-			case ESCAPE:
-			{
-				*ptr++ = ESCAPE;
-				*ptr++ = crc ^ 0x20;
-			} break;
-			default:
-			{
-				*ptr++ = crc;
-			} break;
-		}
-	}
-
-	*ptr++ = FRAMING;
-
-	const size_t len = ptr - dst;
-
-	return len;
-}
 
 static int
 _ftdi_xmit(app_t *app, const uint8_t *buf, ssize_t sz)
@@ -602,14 +493,14 @@ _beat(void *data)
 	clock_gettime(CLOCK_REALTIME, &to);
 
 	// write MONOBUS data
-	sz = _message(dst, sizeof(dst), COMMAND_STATUS, id, NULL, 0);
+	sz = monobus_message(dst, sizeof(dst), COMMAND_STATUS, id, NULL, 0);
 	if(_ftdi_xmit(app, dst, sz) != 0)
 	{
 		atomic_store(&done, true); // end xmit loop
 	}
 
 	// write MONOBUS data
-	sz = _message(dst, sizeof(dst), COMMAND_LED_SETUP, id,
+	sz = monobus_message(dst, sizeof(dst), COMMAND_LED_SETUP, id,
 		(const uint8_t *)&led_setup, sizeof(led_setup));
 	if(_ftdi_xmit(app, dst, sz) != 0)
 	{
@@ -652,7 +543,7 @@ _beat(void *data)
 		}
 
 		// write MONOBUS data
-		sz = _message(dst, sizeof(dst), COMMAND_LED_OUTSET, id,
+		sz = monobus_message(dst, sizeof(dst), COMMAND_LED_OUTSET, id,
 			(const uint8_t *)&led_outset, sizeof(led_outset));
 		if(_ftdi_xmit(app, dst, sz) != 0)
 		{
@@ -665,7 +556,7 @@ _beat(void *data)
 		memcpy(led_outdat.bitmap, state->bitmap, LENGTH);
 
 		// write MONOBUS data
-		sz = _message(dst, sizeof(dst), COMMAND_LED_OUTDAT, id,
+		sz = monobus_message(dst, sizeof(dst), COMMAND_LED_OUTDAT, id,
 			(const uint8_t *)&led_outdat, sizeof(led_outdat));
 		if(_ftdi_xmit(app, dst, sz) != 0)
 		{
@@ -673,7 +564,7 @@ _beat(void *data)
 		}
 
 		// write MONOBUS data
-		sz = _message(dst, sizeof(dst), COMMAND_LED_OUTPUT, id, NULL, 0);
+		sz = monobus_message(dst, sizeof(dst), COMMAND_LED_OUTPUT, id, NULL, 0);
 		if(_ftdi_xmit(app, dst, sz) != 0)
 		{
 			atomic_store(&done, true); // end xmit loop
@@ -691,7 +582,7 @@ _beat(void *data)
 	{
 
 		// write MONOBUS data
-		sz = _message(dst, sizeof(dst), COMMAND_LED_OUTSET, id,
+		sz = monobus_message(dst, sizeof(dst), COMMAND_LED_OUTSET, id,
 			(const uint8_t *)&led_outset, sizeof(led_outset));
 		if(_ftdi_xmit(app, dst, sz) != 0)
 		{
@@ -702,7 +593,7 @@ _beat(void *data)
 		memset(led_outdat.bitmap, 0x0, LENGTH);
 
 		// write MONOBUS data
-		sz = _message(dst, sizeof(dst), COMMAND_LED_OUTDAT, id,
+		sz = monobus_message(dst, sizeof(dst), COMMAND_LED_OUTDAT, id,
 			(const uint8_t *)&led_outdat, sizeof(led_outdat));
 		if(_ftdi_xmit(app, dst, sz) != 0)
 		{
@@ -710,7 +601,7 @@ _beat(void *data)
 		}
 
 		// write MONOBUS data
-		sz = _message(dst, sizeof(dst), COMMAND_LED_OUTPUT, id, NULL, 0);
+		sz = monobus_message(dst, sizeof(dst), COMMAND_LED_OUTPUT, id, NULL, 0);
 		if(_ftdi_xmit(app, dst, sz) != 0)
 		{
 			atomic_store(&done, true); // end xmit loop

@@ -141,11 +141,73 @@ _test_parse()
 	}
 }
 
+static void
+_test_crc8()
+{
+	const uint8_t seed = 0xff;
+
+	// test single-byte crc8
+	{
+		const uint8_t msg [] = {
+			0x1
+		};
+
+		const uint8_t crc8 = ~(~seed ^ msg[0]);
+		assert(crc8 == monobus_crc8(seed, msg, sizeof(msg)));
+	}
+
+	// test two-byte crc8
+	{
+		const uint8_t msg [] = {
+			0x1,
+			0x2
+		};
+
+		const uint8_t crc8 = ~(~seed ^ msg[0] ^ msg[1]);
+		assert(crc8 == monobus_crc8(seed, msg, sizeof(msg)));
+	}
+
+	// test three-byte crc8
+	{
+		const uint8_t msg [] = {
+			0x1,
+			0x2,
+			0x3
+		};
+
+		const uint8_t crc8 = ~(~seed ^ msg[0] ^ msg[1] ^ msg[2]);
+		assert(crc8 == monobus_crc8(seed, msg, sizeof(msg)));
+	}
+
+	// test signgle-call vs iterative call of four-byte crc8
+	{
+		const uint8_t msg [] = {
+			0x1,
+			0x2,
+			0x3,
+			0x4
+		};
+
+		const uint8_t crc8_0 = ~(~seed ^ msg[0] ^ msg[1] ^ msg[2] ^ msg[3]);
+		const uint8_t crc8_1 = monobus_crc8(seed, msg, sizeof(msg));
+
+		uint8_t crc8_2 = seed;
+		for(unsigned i = 0; i < sizeof(msg); i++)
+		{
+			crc8_2 = monobus_crc8(crc8_2, &msg[i], 1);
+		}
+
+		assert(crc8_0 == crc8_1);
+		assert(crc8_1 == crc8_2);
+	}
+}
+
 int
 main(int argc __attribute__((unused)), char **argv __attribute__((unused)))
 {
 	(void)lv2_osc_hooks; //FIXME
 	_test_parse();
+	_test_crc8();
 
 	return 0;
 }
