@@ -57,7 +57,7 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 
 ### Usage
 
-#### Discover your type of FTDI-DMX device via e.g. dmesg when plugging it in
+#### Discover your type of FTDI device via e.g. dmesg when plugging it in
 
 	[user@machine ~] dmesg
 	[  132.718684] usb 1-1.4: New USB device found, idVendor=0403, idProduct=6001, bcdDevice= 6.00
