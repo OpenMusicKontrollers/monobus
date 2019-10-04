@@ -69,11 +69,6 @@ struct _app_t {
 	sched_t *list;
 
 	struct {
-		int out;
-		int inp;
-	} priority;
-
-	struct {
 		varchunk_t *rx;
 		varchunk_t *tx;
 	} rb;
@@ -527,26 +522,6 @@ failure:
 }
 
 static void
-_thread_priority(int priority)
-{
-		if(priority == 0)
-		{
-			return;
-		}
-
-		const struct sched_param schedp = {
-			.sched_priority = priority
-		};
-
-		const pthread_t self = pthread_self();
-
-		if(pthread_setschedparam(self, SCHED_FIFO, &schedp) != 0)
-		{
-			syslog(LOG_ERR, "[%s] '%s'", __func__, strerror(errno));
-		}
-}
-
-static void
 _dump_bitmap(app_t *app)
 {
 	state_t *state = &app->state;
@@ -611,8 +586,6 @@ _beat(void *data)
 	state_t *state = &app->state;
 	const uint8_t id = 0x2;
 	const uint64_t step_ns = NSECS / app->fps;
-
-	_thread_priority(app->priority.out);
 
 	struct timespec to;
 	clock_gettime(CLOCK_REALTIME, &to);
@@ -787,8 +760,6 @@ _loop(app_t *app)
 
 	atomic_store(&done, false);
 
-	_thread_priority(app->priority.inp);
-
 	while(!atomic_load(&done))
 	{
 		const LV2_OSC_Enum status = lv2_osc_stream_pollin(&app->stream, 1000);
@@ -845,11 +816,8 @@ _usage(char **argv, app_t *app)
 		"   [-D] DESCRIPTION         USB product name (%s)\n"
 		"   [-S] SERIAL              USB serial ID (%s)\n"
 		"   [-F] FPS                 Frame rate (%"PRIu32")\n"
-		"   [-U] URI                 OSC URI (%s)\n"
-		"   [-I] PRIORITY            Input (OSC) realtime thread priority (%i)\n"
-		"   [-O] PRIORITY            Output (MONOBUS) realtime thread priority(%i)\n\n"
-		, argv[0], app->vid, app->pid, app->des, app->sid, app->fps, app->url,
-		app->priority.inp, app->priority.out);
+		"   [-U] URI                 OSC URI (%s)\n\n"
+		, argv[0], app->vid, app->pid, app->des, app->sid, app->fps, app->url);
 }
 
 int
@@ -865,8 +833,6 @@ main(int argc, char **argv)
 	app.sid = NULL;
 	app.fps = 2;
 	app.url = "osc.udp://:7777";
-	app.priority.inp = 0;
-	app.priority.out = 0;
 
 	fprintf(stderr,
 		"%s "MONOBUS_VERSION"\n"
@@ -875,7 +841,7 @@ main(int argc, char **argv)
 		argv[0]);
 
 	int c;
-	while( (c = getopt(argc, argv, "vhdATV:P:D:S:F:U:I:O:") ) != -1)
+	while( (c = getopt(argc, argv, "vhdATV:P:D:S:F:U:") ) != -1)
 	{
 		switch(c)
 		{
@@ -924,20 +890,11 @@ main(int argc, char **argv)
 			{
 				app.url = optarg;
 			} break;
-			case 'I':
-			{
-				app.priority.inp = strtol(optarg, NULL, 10);
-			} break;
-			case 'O':
-			{
-				app.priority.out = strtol(optarg, NULL, 10);
-			} break;
 
 			case '?':
 			{
 				if(  (optopt == 'V') || (optopt == 'P') || (optopt == 'D')
-					|| (optopt == 'S') || (optopt == 'F') || (optopt == 'U')
-					|| (optopt == 'I') || (optopt == 'O') )
+					|| (optopt == 'S') || (optopt == 'F') || (optopt == 'U') )
 				{
 					fprintf(stderr, "Option `-%c' requires an argument.\n", optopt);
 				}
