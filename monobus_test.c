@@ -136,7 +136,6 @@ _test_parse()
 
 		for(unsigned i = 0; i < LENGTH; i++)
 		{
-			fprintf(stderr, "%02x %u\n", state.bitmap[i], i);
 			assert(state.bitmap[i] == i);
 		}
 	}
