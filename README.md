@@ -32,7 +32,7 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 
 #### Git repository
 
-* <https://git.open-music-kontrollers.ch/mix/monobus>
+* <https://git.open-music-kontrollers.ch/gfx/monobus>
 
 ### Bugs and feature requests
 
