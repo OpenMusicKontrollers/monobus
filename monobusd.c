@@ -548,11 +548,6 @@ _dump_bitmap(app_t *app)
 		wattroff(win, COLOR_PAIR(1));
 	}
 
-	if(has_colors())
-	{
-		wattron(win, COLOR_PAIR(2));
-	}
-
 	for(unsigned y = 0; y < HEIGHT; y++)
 	{
 		const unsigned row_offset = y*STRIDE;
@@ -563,13 +558,29 @@ _dump_bitmap(app_t *app)
 			const uint8_t byte = state->bitmap[row_offset + col_offset];
 			const uint8_t mask = 1 << (x % 8);
 
-			mvwprintw(win, x + 1, y*MUL + 1, byte & mask ? " ●" : "  ");
-		}
-	}
+			if(byte & mask)
+			{
+				if(has_colors())
+				{
+					wattron(win, COLOR_PAIR(2) | A_BOLD);
+				}
 
-	if(has_colors())
-	{
-		wattroff(win, COLOR_PAIR(2));
+				mvwprintw(win, x + 1, y*MUL + 1, " ●");
+
+				if(has_colors())
+				{
+					wattroff(win, COLOR_PAIR(2) | A_BOLD);
+				}
+			}
+			else if(has_colors())
+			{
+				wattron(win, COLOR_PAIR(3) | A_BOLD);
+
+				mvwprintw(win, x + 1, y*MUL + 1, " ●");
+
+				wattroff(win, COLOR_PAIR(3) | A_BOLD);
+			}
+		}
 	}
 
 	wrefresh(win);
@@ -935,6 +946,7 @@ main(int argc, char **argv)
 			start_color();
 			init_pair(1, COLOR_WHITE, COLOR_BLACK);
 			init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+			init_pair(3, COLOR_BLACK, COLOR_BLACK);
 		}
 	}
 
