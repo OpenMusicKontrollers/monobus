@@ -44,6 +44,7 @@ typedef enum _command_type_t {
 typedef struct _payload_led_setup_t payload_led_setup_t;
 typedef struct _payload_led_outset_t payload_led_outset_t;
 typedef struct _payload_led_outdat_t payload_led_outdat_t;
+typedef struct _pixel_t pixel_t;
 typedef struct _state_t state_t;
 
 struct _payload_led_setup_t {
@@ -83,8 +84,14 @@ struct _payload_led_outdat_t {
 	uint8_t bitmap [LENGTH]; // bitmap in PBM format
 } __attribute__((packed));
 
+struct _pixel_t {
+	uint32_t mask;
+	uint32_t bits;
+};
+
 struct _state_t {
 	uint8_t bitmap [LENGTH]; // bitmap in PBM format
+	pixel_t pixels [HEIGHT][WIDTH];
 };
 
 extern const LV2_OSC_Tree tree_root [];

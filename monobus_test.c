@@ -31,7 +31,7 @@ _test_parse()
 		const uint8_t msg [] = {
 			'/', 'm', 'o', 'n',
 			'o', 'b', 'u', 's',
-			0x0, 0x0, 0x0, 0x0,
+			'/', '0', 0x0, 0x0,
 			',', 0x0, 0x0, 0x0
 		};
 
@@ -52,7 +52,7 @@ _test_parse()
 		const uint8_t msg [] = {
 			'/', 'm', 'o', 'n',
 			'o', 'b', 'u', 's',
-			0x0, 0x0, 0x0, 0x0,
+			'/', '1', 0x0, 0x0,
 			',', 'b', 0x0, 0x0,
 
 			0x00, 0x00, 0x00, LENGTH, // blob size

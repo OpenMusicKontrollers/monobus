@@ -32,6 +32,7 @@
 typedef struct _app_t app_t;
 
 struct _app_t {
+	uint8_t prio;
 	const char *url;
 	const char *path;
 
@@ -159,9 +160,10 @@ _usage(char **argv, app_t *app)
 		"   [-v]                     print version information\n"
 		"   [-h]                     print usage information\n"
 		"   [-d]                     enable verbose logging\n"
+		"   [-P] PRIO                set priority of message(%"PRIu8")\n"
 		"   [-U] URI                 OSC URI (%s)\n"
 		"   [-I] FILE                Bitmap in PBM format (%s)\n"
-		, argv[0], app->url, app->path);
+		, argv[0], app->prio, app->url, app->path);
 }
 
 int
@@ -172,6 +174,7 @@ main(int argc, char **argv)
 	static app_t app;
 	int logp = LOG_INFO;
 
+	app.prio = 0;
 	app.url = "osc.udp://localhost:7777";
 	app.path = "-";
 
@@ -283,7 +286,9 @@ main(int argc, char **argv)
 	lv2_osc_writer_initialize(&writer, buf, sz);
 
 	const int32_t len = LENGTH;
-	if(!lv2_osc_writer_message_vararg(&writer, "/monobus", "b", len, app.bitmap))
+	char path [32];
+	snprintf(path, sizeof(path), "/monobus/%"PRIu8, app.prio);
+	if(!lv2_osc_writer_message_vararg(&writer, path, "b", len, app.bitmap))
 	{
 		syslog(LOG_ERR, "lv2_osc_writer_message_vararg");
 		goto failure;

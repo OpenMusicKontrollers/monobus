@@ -97,12 +97,17 @@ monobus_message(uint8_t *dst, size_t dst_len, uint8_t command, uint8_t id,
 	return len;
 }
 
+static const LV2_OSC_Tree tree_priority [32+1]; //FIXME
+
 static void
-_root(LV2_OSC_Reader *reader, LV2_OSC_Arg *arg,
-	const LV2_OSC_Tree *tree __attribute__((unused)), void *data)
+_priority (LV2_OSC_Reader *reader __attribute__((unused)),
+	LV2_OSC_Arg *arg __attribute__((unused)), const LV2_OSC_Tree *tree, void *data)
 {
 	(void)lv2_osc_hooks; //FIXME
 	state_t *state = data;
+	const uint8_t prio = tree - tree_priority;
+	(void)prio; //FIXME
+
 	bool set = false;
 
 	for( ;
@@ -133,7 +138,43 @@ _root(LV2_OSC_Reader *reader, LV2_OSC_Arg *arg,
 	}
 }
 
+static const LV2_OSC_Tree tree_priority [32+1] = {
+	{ .name =  "0", .branch = _priority },
+	{ .name =  "1", .branch = _priority },
+	{ .name =  "2", .branch = _priority },
+	{ .name =  "3", .branch = _priority },
+	{ .name =  "4", .branch = _priority },
+	{ .name =  "5", .branch = _priority },
+	{ .name =  "6", .branch = _priority },
+	{ .name =  "7", .branch = _priority },
+	{ .name =  "8", .branch = _priority },
+	{ .name =  "9", .branch = _priority },
+	{ .name = "10", .branch = _priority },
+	{ .name = "11", .branch = _priority },
+	{ .name = "12", .branch = _priority },
+	{ .name = "13", .branch = _priority },
+	{ .name = "14", .branch = _priority },
+	{ .name = "15", .branch = _priority },
+	{ .name = "16", .branch = _priority },
+	{ .name = "17", .branch = _priority },
+	{ .name = "18", .branch = _priority },
+	{ .name = "19", .branch = _priority },
+	{ .name = "20", .branch = _priority },
+	{ .name = "21", .branch = _priority },
+	{ .name = "22", .branch = _priority },
+	{ .name = "23", .branch = _priority },
+	{ .name = "24", .branch = _priority },
+	{ .name = "25", .branch = _priority },
+	{ .name = "26", .branch = _priority },
+	{ .name = "27", .branch = _priority },
+	{ .name = "28", .branch = _priority },
+	{ .name = "29", .branch = _priority },
+	{ .name = "30", .branch = _priority },
+	{ .name = "31", .branch = _priority },
+	{ .name = NULL }
+};
+
 const LV2_OSC_Tree tree_root [1+1] = {
-	{ .name = "monobus", .branch = _root },
+	{ .name = "monobus", .trees = tree_priority },
 	{ .name = NULL }
 };

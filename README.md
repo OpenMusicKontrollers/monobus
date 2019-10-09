@@ -92,13 +92,13 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 #### Control monobusd with your favorite OSC client
 
 
-##### **/monobus b BITMAP-DATA**
+##### **/monobus/PRIO b BITMAP-DATA**
 
 To set the bitmap, send your OSC messages to given OSC path with
-**b**lob argument being your bitmap data in PBM payload format.
+**PRIO** 0-31 and **b**lob argument being your bitmap data in PBM payload format.
 
 	# set bitmap
-	oscsend osc.udp://localhost:7777 /monobus b 224 ...
+	oscsend osc.udp://localhost:7777 /monobus/0 b 224 ...
 
 ### License
 
