@@ -28,10 +28,15 @@
 extern "C" {
 #endif
 
-#define WIDTH  16
-#define HEIGHT 112
-#define STRIDE (WIDTH / 8)
-#define LENGTH (STRIDE * HEIGHT)
+#define WIDTH_SER  16
+#define HEIGHT_SER 112
+#define STRIDE_SER (WIDTH_SER / 8)
+#define LENGTH_SER (STRIDE_SER * HEIGHT_SER)
+
+#define WIDTH_NET  112
+#define HEIGHT_NET 16
+#define STRIDE_NET (WIDTH_NET / 8)
+#define LENGTH_NET (STRIDE_NET * HEIGHT_NET)
 
 typedef enum _command_type_t {
 	COMMAND_STATUS     = 0x80,
@@ -81,7 +86,7 @@ struct _payload_led_outset_t {
 struct _payload_led_outdat_t {
 	uint8_t unknown_00;      // FIXME what is this byte for ?
 	uint8_t len;             // byte-length of bitmap
-	uint8_t bitmap [LENGTH]; // bitmap in PBM format
+	uint8_t bitmap [LENGTH_SER]; // bitmap in PBM format
 } __attribute__((packed));
 
 struct _pixel_t {
@@ -90,8 +95,7 @@ struct _pixel_t {
 };
 
 struct _state_t {
-	uint8_t bitmap [LENGTH]; // bitmap in PBM format
-	pixel_t pixels [HEIGHT][WIDTH];
+	pixel_t pixels [HEIGHT_NET][WIDTH_NET];
 };
 
 extern const LV2_OSC_Tree tree_root [];

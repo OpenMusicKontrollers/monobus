@@ -97,6 +97,63 @@ monobus_message(uint8_t *dst, size_t dst_len, uint8_t command, uint8_t id,
 	return len;
 }
 
+static bool
+_get_bit(const uint8_t *blob, unsigned y, unsigned x)
+{
+	x = WIDTH_NET - x - 1;
+	const unsigned row_offset = y * STRIDE_NET;
+	const unsigned col_offset = STRIDE_NET - (x / 8) - 1;
+	const uint8_t byte = blob[row_offset + col_offset];
+	const uint8_t mask = 1 << (x % 8);
+
+	return (byte & mask);
+}
+
+static void
+_set_pixels(state_t *state, uint8_t prio, const uint8_t *blob)
+{
+	const uint32_t mask = (1 << prio);
+
+	for(unsigned y = 0; y < HEIGHT_NET; y++)
+	{
+		pixel_t *row = state->pixels[y];
+
+		for(unsigned x = 0; x < WIDTH_NET; x++)
+		{
+			pixel_t *pixel = &row[x];
+
+			pixel->mask |= mask;
+
+			if(_get_bit(blob, y, x))
+			{
+				pixel->bits |= mask;
+			}
+			else
+			{
+				pixel->bits &= ~mask;
+			}
+		}
+	}
+}
+
+static void
+_clr_pixels(state_t *state, uint8_t prio)
+{
+	const uint32_t mask = (1 << prio);
+
+	for(unsigned y = 0; y < HEIGHT_NET; y++)
+	{
+		pixel_t *row = state->pixels[y];
+
+		for(unsigned x = 0; x < WIDTH_NET; x++)
+		{
+			pixel_t *pixel = &row[x];
+
+			pixel->mask &= ~mask;
+		}
+	}
+}
+
 static const LV2_OSC_Tree tree_priority [32+1]; //FIXME
 
 static void
@@ -106,7 +163,6 @@ _priority (LV2_OSC_Reader *reader __attribute__((unused)),
 	(void)lv2_osc_hooks; //FIXME
 	state_t *state = data;
 	const uint8_t prio = tree - tree_priority;
-	(void)prio; //FIXME
 
 	bool set = false;
 
@@ -118,9 +174,9 @@ _priority (LV2_OSC_Reader *reader __attribute__((unused)),
 		{
 			case LV2_OSC_BLOB:
 			{
-				if(arg->size == LENGTH)
+				if(arg->size == LENGTH_NET)
 				{
-					memcpy(state->bitmap, arg->b, LENGTH);
+					_set_pixels(state, prio, arg->b);
 					set = true;
 				}
 			} break;
@@ -134,7 +190,7 @@ _priority (LV2_OSC_Reader *reader __attribute__((unused)),
 
 	if(!set)
 	{
-		memset(state->bitmap, 0x0, LENGTH);
+		_clr_pixels(state, prio);
 	}
 }
 

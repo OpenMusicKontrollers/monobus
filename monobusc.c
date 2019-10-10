@@ -43,7 +43,7 @@ struct _app_t {
 		varchunk_t *tx;
 	} rb;
 
-	uint8_t bitmap [LENGTH];
+	uint8_t bitmap [LENGTH_NET];
 };
 
 static void *
@@ -254,7 +254,7 @@ main(int argc, char **argv)
 	pbm_init(&argc, argv);
 	pbm_readpbminit(fin, &width, &height, &format);
 
-	if( (width != WIDTH) || (height != HEIGHT) )
+	if( (width != WIDTH_NET) || (height != HEIGHT_NET) )
 	{
 		syslog(LOG_ERR, "[%s] 'width or height invalid'", __func__);
 		return -1;
@@ -285,7 +285,7 @@ main(int argc, char **argv)
 
 	lv2_osc_writer_initialize(&writer, buf, sz);
 
-	const int32_t len = LENGTH;
+	const int32_t len = LENGTH_NET;
 	char path [32];
 	snprintf(path, sizeof(path), "/monobus/%"PRIu8, app.prio);
 	if(!lv2_osc_writer_message_vararg(&writer, path, "b", len, app.bitmap))

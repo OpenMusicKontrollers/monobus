@@ -41,9 +41,13 @@ _test_parse()
 		memset(&state, 0x0, sizeof(state));
 		lv2_osc_reader_match(&reader, sizeof(msg), tree_root, &state);
 
-		for(unsigned i = 0; i < LENGTH; i++)
+		for(unsigned y = 0; y < HEIGHT_NET; y++)
 		{
-			assert(state.bitmap[i] == 0x0);
+			for(unsigned x = 0; x < WIDTH_NET; x++)
+			{
+				assert(state.pixels[y][x].mask == 0x0);
+				assert(state.pixels[y][x].bits== 0x0);
+			}
 		}
 	}
 
@@ -55,7 +59,7 @@ _test_parse()
 			'/', '1', 0x0, 0x0,
 			',', 'b', 0x0, 0x0,
 
-			0x00, 0x00, 0x00, LENGTH, // blob size
+			0x00, 0x00, 0x00, LENGTH_NET, // blob size
 
 			0x00, 0x01, 0x02, 0x03, // blob data (aka bitmap)
 			0x04, 0x05, 0x06, 0x07,
@@ -134,9 +138,15 @@ _test_parse()
 		memset(&state, 0x0, sizeof(state));
 		lv2_osc_reader_match(&reader, sizeof(msg), tree_root, &state);
 
-		for(unsigned i = 0; i < LENGTH; i++)
+		for(unsigned y = 0; y < HEIGHT_NET; y++)
 		{
-			assert(state.bitmap[i] == i);
+			for(unsigned x = 0; x < WIDTH_NET; x++)
+			{
+				assert(state.pixels[y][x].mask == 0x2);
+
+				assert( (state.pixels[y][x].bits == 0x2)
+					|| (state.pixels[y][x].bits == 0x0) ); //FIXME
+			}
 		}
 	}
 }

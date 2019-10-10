@@ -9,7 +9,7 @@ txt2pbm()
 	local style=b
 	local width=112
 	local height=16
-	local rotation=90
+	local rotation=0
 
 	convert \
 		-size ${width}x${height} \

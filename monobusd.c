@@ -241,13 +241,13 @@ static const payload_led_outset_t led_outset = {
 	.unknown_03 = 0x00,
 	.unknown_04 = 0x00,
 	.unknown_05 = 0x00,
-	.len = LENGTH,
+	.len = LENGTH_SER,
 	.unknown_07 = 0x07
 };
 
 static payload_led_outdat_t led_outdat = {
 	.unknown_00 = 0xff,
-	.len = LENGTH,
+	.len = LENGTH_SER,
 	.bitmap = { 0x0 }
 };
 
@@ -412,6 +412,25 @@ failure:
 	return -1;
 }
 
+static bool
+_get_bit(state_t *state, unsigned y, unsigned x)
+{
+	pixel_t *pixel = &state->pixels[y][x];
+
+	if(pixel->mask != 0x0)
+	{
+		for(uint32_t j = 0, mask = 0x80000000; j < 32; j++, mask >>= 1)
+		{
+			if(pixel->mask & mask)
+			{
+				return (pixel->bits & mask);
+			}
+		}
+	}
+
+	return false;
+}
+
 static void
 _dump_bitmap(app_t *app)
 {
@@ -425,7 +444,7 @@ _dump_bitmap(app_t *app)
 	clear();
 
 #define MUL 2
-	WINDOW *win = newwin(WIDTH + 2, HEIGHT*MUL + 2 + 1, 0, 0);
+	WINDOW *win = newwin(HEIGHT_NET + 2, WIDTH_NET*MUL + 2 + 1, 0, 0);
 
 	if(has_colors())
 	{
@@ -439,24 +458,18 @@ _dump_bitmap(app_t *app)
 		wattroff(win, COLOR_PAIR(1));
 	}
 
-	for(unsigned y = 0; y < HEIGHT; y++)
+	for(unsigned y = 0; y < HEIGHT_NET; y++)
 	{
-		const unsigned row_offset = y*STRIDE;
-
-		for(unsigned x = 0; x < WIDTH; x++)
+		for(unsigned x = 0; x < WIDTH_NET; x++)
 		{
-			const unsigned col_offset = STRIDE - (x / 8) - 1;
-			const uint8_t byte = state->bitmap[row_offset + col_offset];
-			const uint8_t mask = 1 << (x % 8);
-
-			if(byte & mask)
+			if(_get_bit(state, y, x))
 			{
 				if(has_colors())
 				{
 					wattron(win, COLOR_PAIR(2) | A_BOLD);
 				}
 
-				mvwprintw(win, x + 1, y*MUL + 1, " ●");
+				mvwprintw(win, y + 1, x*MUL + 1, " ●");
 
 				if(has_colors())
 				{
@@ -467,7 +480,7 @@ _dump_bitmap(app_t *app)
 			{
 				wattron(win, COLOR_PAIR(3) | A_BOLD);
 
-				mvwprintw(win, x + 1, y*MUL + 1, " ●");
+				mvwprintw(win, y + 1, x*MUL + 1, " ●");
 
 				wattroff(win, COLOR_PAIR(3) | A_BOLD);
 			}
@@ -554,8 +567,24 @@ _beat(void *data)
 
 		_dump_bitmap(app);
 
-		// copy bitmap to outdat
-		memcpy(led_outdat.bitmap, state->bitmap, LENGTH);
+		// create rotated bitmap in PBM format
+		memset(led_outdat.bitmap, 0x0, LENGTH_SER);
+
+		for(unsigned y = 0; y < HEIGHT_SER; y++)
+		{
+			for(unsigned x = 0; x < WIDTH_SER; x++)
+			{
+				if(_get_bit(state, x, y))
+				{
+					const unsigned row_offset = y * STRIDE_SER;
+					const unsigned col_offset = STRIDE_SER - (x / 8) - 1;
+					uint8_t *byte = &led_outdat.bitmap[row_offset + col_offset];
+					const uint8_t mask = 1 << (x % 8);
+
+					*byte |= mask;
+				}
+			}
+		}
 
 		// write MONOBUS data
 		sz = monobus_message(dst, sizeof(dst), COMMAND_LED_OUTDAT, id,
@@ -592,7 +621,7 @@ _beat(void *data)
 		}
 
 		// clear bitmap in outdat
-		memset(led_outdat.bitmap, 0x0, LENGTH);
+		memset(led_outdat.bitmap, 0x0, LENGTH_SER);
 
 		// write MONOBUS data
 		sz = monobus_message(dst, sizeof(dst), COMMAND_LED_OUTDAT, id,
