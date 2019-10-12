@@ -35,8 +35,16 @@ stages:
   image: ventosus/universal-linux-gnu:bullseye
   <<: *build_definition
 
-.arm_linux_template: &arm_linux_definition
-  image: ventosus/arm-linux-gnueabihf
+.arm_linux_template_stretch: &arm_linux_definition_stretch
+  image: ventosus/arm-linux-gnueabihf:stretch
+  <<: *build_definition
+
+.arm_linux_template_buster: &arm_linux_definition_buster
+  image: ventosus/arm-linux-gnueabihf:buster
+  <<: *build_definition
+
+.arm_linux_template_bullseye: &arm_linux_definition_bullseye
+  image: ventosus/arm-linux-gnueabihf:bullseye
   <<: *build_definition
 
 .universal_w64_template: &universal_w64_definition
@@ -50,55 +58,63 @@ stages:
 # building in docker
 x86_64-linux-gnu-stretch:
   before_script:
-    - ln -s /opt/x86_64-linux-gnu /opt/x86_64-linux-gnu-stretch
-    - ln -s /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu-stretch
     - apt-get install -y libftdi1-dev libudev-dev libnetpbm10-dev libncurses-dev libtinfo-dev
   <<: *universal_linux_definition_stretch
 
 x86_64-linux-gnu-buster:
   before_script:
-    - ln -s /opt/x86_64-linux-gnu /opt/x86_64-linux-gnu-buster
-    - ln -s /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu-buster
     - apt-get install -y libftdi1-dev libudev-dev libnetpbm10-dev libncurses-dev libtinfo-dev
   <<: *universal_linux_definition_buster
 
 x86_64-linux-gnu-bullseye:
   before_script:
-    - ln -s /opt/x86_64-linux-gnu /opt/x86_64-linux-gnu-bullseye
-    - ln -s /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu-bullseye
     - apt-get install -y libftdi1-dev libudev-dev libnetpbm10-dev libncurses-dev libtinfo-dev
   <<: *universal_linux_definition_bullseye
 
 i686-linux-gnu-stretch:
   before_script:
-    - ln -s /opt/i686-linux-gnu /opt/i686-linux-gnu-stretch
-    - ln -s /usr/lib/i686-linux-gnu /usr/lib/i686-linux-gnu-stretch
     - apt-get install -y libftdi1-dev:i386 libudev-dev:i386 libnetpbm10-dev:i386 libncurses-dev:i386 libtinfo-dev:i386
   <<: *universal_linux_definition_stretch
 
 i686-linux-gnu-buster:
   before_script:
-    - ln -s /opt/i686-linux-gnu /opt/i686-linux-gnu-buster
-    - ln -s /usr/lib/i686-linux-gnu /usr/lib/i686-linux-gnu-buster
     - apt-get install -y libftdi1-dev:i386 libudev-dev:i386 libnetpbm10-dev:i386 libncurses-dev:i386 libtinfo-dev:i386
   <<: *universal_linux_definition_buster
 
 i686-linux-gnu-bullseye:
   before_script:
-    - ln -s /opt/i686-linux-gnu /opt/i686-linux-gnu-bullseye
-    - ln -s /usr/lib/i686-linux-gnu /usr/lib/i686-linux-gnu-bullseye
     - apt-get install -y libftdi1-dev:i386 libudev-dev:i386 libnetpbm10-dev:i386 libncurses-dev:i386 libtinfo-dev:i386
   <<: *universal_linux_definition_bullseye
 
-arm-linux-gnueabihf:
+arm-linux-gnueabihf-stretch:
   before_script:
     - apt-get install -y libftdi1-dev:armhf libudev-dev:armhf libnetpbm10-dev:armhf libncurses-dev:armhf libtinfo-dev:armhf
-  <<: *arm_linux_definition
+  <<: *arm_linux_definition_stretch
 
-aarch64-linux-gnu:
+arm-linux-gnueabihf-buster:
+  before_script:
+    - apt-get install -y libftdi1-dev:armhf libudev-dev:armhf libnetpbm10-dev:armhf libncurses-dev:armhf libtinfo-dev:armhf
+  <<: *arm_linux_definition_buster
+
+arm-linux-gnueabihf-bullseye:
+  before_script:
+    - apt-get install -y libftdi1-dev:armhf libudev-dev:armhf libnetpbm10-dev:armhf libncurses-dev:armhf libtinfo-dev:armhf
+  <<: *arm_linux_definition_bullseye
+
+aarch64-linux-gnu-stretch:
   before_script:
     - apt-get install -y libftdi1-dev:arm64 libudev-dev:arm64 libnetpbm10-dev:arm64 libncurses-dev:arm64 libtinfo-dev:arm64
-  <<: *arm_linux_definition
+  <<: *arm_linux_definition_stretch
+
+aarch64-linux-gnu-buster:
+  before_script:
+    - apt-get install -y libftdi1-dev:arm64 libudev-dev:arm64 libnetpbm10-dev:arm64 libncurses-dev:arm64 libtinfo-dev:arm64
+  <<: *arm_linux_definition_buster
+
+aarch64-linux-gnu-bullseye:
+  before_script:
+    - apt-get install -y libftdi1-dev:arm64 libudev-dev:arm64 libnetpbm10-dev:arm64 libncurses-dev:arm64 libtinfo-dev:arm64
+  <<: *arm_linux_definition_bullseye
 
 #x86_64-w64-mingw32:
 #  <<: *universal_w64_definition
