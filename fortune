@@ -8,17 +8,19 @@ export url="osc.udp://[${ip}]:7777"
 
 txt2pbm()
 {
-	local pointsize=18
-	local style=b
+	local pointwidth=5
+	local pointsize=9
+	local style=r
 	local width=112
 	local height=16
 	local rotation=0
 
 	convert \
 		-size ${width}x${height} \
-		-font "/usr/share/fonts/misc/ter-x${pointsize}${style}.pcf.gz" \
+		-font "/usr/share/fonts/misc/Tamsyn${pointwidth}x${pointsize}${style}.pcf" \
 		-pointsize ${pointsize} \
-		-gravity East \
+		-gravity center \
+		-interline-spacing '-2' \
 		caption:"${1:-MonoBus}" \
 		-rotate ${rotation} \
 		pbm:
@@ -28,11 +30,7 @@ export -f txt2pbm
 
 render()
 {
-	local unixtime
-
-	unixtime=$( date +%s )
-
-	txt2pbm "$( printf 0x%08x "${unixtime}" )"
+	txt2pbm "$( fortune -n 40 -s )"
 }
 
 export -f render
@@ -44,4 +42,4 @@ animate()
 
 export -f animate
 
-exec watch -n 1 animate
+exec watch -n 20 animate

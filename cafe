@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+set -u
+
+ip="${1:-localhost}"
+export url="osc.udp://[${ip}]:7777"
+
+animate()
+{
+	for file in cafe_*.pbm; do
+		monobusc -U ${url} -I "${file}"
+		sleep .5
+	done
+}
+
+export -f animate
+
+exec watch -n 2 animate
