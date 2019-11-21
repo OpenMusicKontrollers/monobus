@@ -4,7 +4,7 @@ stages:
 
 .variables_template: &variables_definition
   variables:
-    BASE_NAME: "osc2ftdimonobus"
+    BASE_NAME: "monobus"
     PKG_CONFIG_PATH: "/opt/lv2/lib/pkgconfig:/opt/${CI_BUILD_NAME}/lib/pkgconfig:/usr/lib/${CI_BUILD_NAME}/pkgconfig"
 
 .common_template: &common_definition
