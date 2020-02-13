@@ -32,6 +32,8 @@
 typedef struct _app_t app_t;
 
 struct _app_t {
+	uint8_t xoff;
+	uint8_t yoff;
 	uint8_t prio;
 	const char *url;
 	const char *path;
@@ -160,10 +162,12 @@ _usage(char **argv, app_t *app)
 		"   [-v]                     print version information\n"
 		"   [-h]                     print usage information\n"
 		"   [-d]                     enable verbose logging\n"
-		"   [-P] PRIO                set priority of message(%"PRIu8")\n"
+		"   [-P] PRIO                set priority of message (%"PRIu8")\n"
+		"   [-X] X_OFSET             set x-offset of bitmap (%"PRIu8")\n"
+		"   [-Y] Y_OFSET             set y-offset of bitmap (%"PRIu8")\n"
 		"   [-U] URI                 OSC URI (%s)\n"
 		"   [-I] FILE                Bitmap in PBM format (%s)\n"
-		, argv[0], app->prio, app->url, app->path);
+		, argv[0], app->xoff, app->yoff, app->prio, app->url, app->path);
 }
 
 int
@@ -174,6 +178,8 @@ main(int argc, char **argv)
 	static app_t app;
 	int logp = LOG_INFO;
 
+	app.xoff = 0;
+	app.yoff = 0;
 	app.prio = 0;
 	app.url = "osc.udp://localhost:7777";
 	app.path = "-";
@@ -190,7 +196,7 @@ main(int argc, char **argv)
 		argv[0]);
 
 	int c;
-	while( (c = getopt(argc, argv, "vhdU:I:") ) != -1)
+	while( (c = getopt(argc, argv, "vhdP:X:Y:U:I:") ) != -1)
 	{
 		switch(c)
 		{
@@ -206,6 +212,18 @@ main(int argc, char **argv)
 			{
 				logp = LOG_DEBUG;
 			}	break;
+			case 'P':
+			{
+				app.prio = atoi(optarg);
+			} break;
+			case 'X':
+			{
+				app.xoff = atoi(optarg);
+			} break;
+			case 'Y':
+			{
+				app.yoff = atoi(optarg);
+			} break;
 			case 'U':
 			{
 				app.url = optarg;
@@ -254,9 +272,15 @@ main(int argc, char **argv)
 	pbm_init(&argc, argv);
 	pbm_readpbminit(fin, &width, &height, &format);
 
-	if( (width != WIDTH_NET) || (height != HEIGHT_NET) )
+	if(width > WIDTH_NET)
 	{
-		syslog(LOG_ERR, "[%s] 'width or height invalid'", __func__);
+		syslog(LOG_ERR, "[%s] 'width too large %i>%i'", __func__, width, WIDTH_NET);
+		return -1;
+	}
+
+	if(height > HEIGHT_NET)
+	{
+		syslog(LOG_ERR, "[%s] 'height too large %i>%i'", __func__, height, HEIGHT_NET);
 		return -1;
 	}
 
@@ -285,10 +309,11 @@ main(int argc, char **argv)
 
 	lv2_osc_writer_initialize(&writer, buf, sz);
 
-	const int32_t len = LENGTH_NET;
+	const int32_t len = width*height/sizeof(uint8_t);
 	char path [32];
 	snprintf(path, sizeof(path), "/monobus/%"PRIu8, app.prio);
-	if(!lv2_osc_writer_message_vararg(&writer, path, "b", len, app.bitmap))
+	if(!lv2_osc_writer_message_vararg(&writer, path, "iiiib",
+		app.xoff, app.yoff, width, height, len, app.bitmap))
 	{
 		syslog(LOG_ERR, "lv2_osc_writer_message_vararg");
 		goto failure;

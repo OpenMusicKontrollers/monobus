@@ -109,18 +109,24 @@ _get_bit(const uint8_t *blob, unsigned y, unsigned x)
 	return (byte & mask);
 }
 
+#define MAX(A, B) ( (A) > (B) ? (B) : (A) )
+
 static void
-_set_pixels(state_t *state, uint8_t prio, const uint8_t *blob)
+_set_pixels(state_t *state, uint8_t prio, unsigned offx, unsigned offy,
+	unsigned width, unsigned height, const uint8_t *blob)
 {
 	const uint32_t mask = (1 << prio);
 
-	for(unsigned y = 0; y < HEIGHT_NET; y++)
-	{
-		pixel_t *row = state->pixels[y];
+	const unsigned maxy = MAX(height, HEIGHT_NET - offy);
+	const unsigned maxx = MAX(width, WIDTH_NET - offx);
 
-		for(unsigned x = 0; x < WIDTH_NET; x++)
+	for(unsigned y = 0; y < maxy; y++)
+	{
+		pixel_t *row = state->pixels[offy + y];
+
+		for(unsigned x = 0; x < maxx; x++)
 		{
-			pixel_t *pixel = &row[x];
+			pixel_t *pixel = &row[offx + x];
 
 			pixel->mask |= mask;
 
@@ -137,17 +143,21 @@ _set_pixels(state_t *state, uint8_t prio, const uint8_t *blob)
 }
 
 static void
-_clr_pixels(state_t *state, uint8_t prio)
+_clr_pixels(state_t *state, uint8_t prio, unsigned offx, unsigned offy,
+	unsigned width, unsigned height)
 {
 	const uint32_t mask = (1 << prio);
 
-	for(unsigned y = 0; y < HEIGHT_NET; y++)
-	{
-		pixel_t *row = state->pixels[y];
+	const unsigned maxy = MAX(height, HEIGHT_NET - offy);
+	const unsigned maxx = MAX(width, WIDTH_NET - offx);
 
-		for(unsigned x = 0; x < WIDTH_NET; x++)
+	for(unsigned y = 0; y < maxy; y++)
+	{
+		pixel_t *row = state->pixels[offy + y];
+
+		for(unsigned x = 0; x < maxx; x++)
 		{
-			pixel_t *pixel = &row[x];
+			pixel_t *pixel = &row[offx + x];
 
 			pixel->mask &= ~mask;
 		}
@@ -157,14 +167,20 @@ _clr_pixels(state_t *state, uint8_t prio)
 static const LV2_OSC_Tree tree_priority [32+1]; //FIXME
 
 static void
-_priority (LV2_OSC_Reader *reader __attribute__((unused)),
-	LV2_OSC_Arg *arg __attribute__((unused)), const LV2_OSC_Tree *tree, void *data)
+_priority (LV2_OSC_Reader *reader, LV2_OSC_Arg *arg, const LV2_OSC_Tree *tree,
+	void *data)
 {
 	(void)lv2_osc_hooks; //FIXME
 	state_t *state = data;
 	const uint8_t prio = tree - tree_priority;
 
 	bool set = false;
+	unsigned idx = 0;
+
+	int32_t offx = 0;
+	int32_t offy = 0;
+	int32_t width = WIDTH_NET;
+	int32_t height = HEIGHT_NET;
 
 	for( ;
 			!lv2_osc_reader_arg_is_end(reader, arg);
@@ -172,11 +188,35 @@ _priority (LV2_OSC_Reader *reader __attribute__((unused)),
 	{
 		switch(arg->type[0])
 		{
+			case LV2_OSC_INT32:
+			{
+				switch(idx++)
+				{
+					case 0:
+					{
+						offx = arg->i;
+					} break;
+					case 1:
+					{
+						offy = arg->i;
+					} break;
+					case 2:
+					{
+						width = arg->i;
+					} break;
+					case 3:
+					{
+						height = arg->i;
+					} break;
+				}
+			} break;
 			case LV2_OSC_BLOB:
 			{
-				if(arg->size == LENGTH_NET)
+				const int32_t tot_len = width*height/sizeof(uint8_t);
+
+				if(arg->size >= tot_len)
 				{
-					_set_pixels(state, prio, arg->b);
+					_set_pixels(state, prio, offx, offy, width, height, arg->b);
 					set = true;
 				}
 			} break;
@@ -190,7 +230,7 @@ _priority (LV2_OSC_Reader *reader __attribute__((unused)),
 
 	if(!set)
 	{
-		_clr_pixels(state, prio);
+		_clr_pixels(state, prio, offx, offy, width, height);
 	}
 }
 
