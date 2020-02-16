@@ -44,8 +44,6 @@ struct _app_t {
 		varchunk_t *rx;
 		varchunk_t *tx;
 	} rb;
-
-	uint8_t bitmap [LENGTH_NET];
 };
 
 static void *
@@ -272,19 +270,16 @@ main(int argc, char **argv)
 	pbm_init(&argc, argv);
 	pbm_readpbminit(fin, &width, &height, &format);
 
-	if(width > WIDTH_NET)
+	const int32_t len = width * height / 8;
+	uint8_t *bitmap = alloca(len);
+	if(!bitmap)
 	{
-		syslog(LOG_ERR, "[%s] 'width too large %i>%i'", __func__, width, WIDTH_NET);
+		syslog(LOG_ERR, "[%s] 'out of memory'", __func__);
+		fclose(fin);
 		return -1;
 	}
 
-	if(height > HEIGHT_NET)
-	{
-		syslog(LOG_ERR, "[%s] 'height too large %i>%i'", __func__, height, HEIGHT_NET);
-		return -1;
-	}
-
-	pbm_readpbmrow_packed(fin, app.bitmap, width*height, format);
+	pbm_readpbmrow_packed(fin, bitmap, width*height, format);
 
 	if(fin != stdin)
 	{
@@ -309,11 +304,10 @@ main(int argc, char **argv)
 
 	lv2_osc_writer_initialize(&writer, buf, sz);
 
-	const int32_t len = width*height/sizeof(uint8_t);
 	char path [32];
 	snprintf(path, sizeof(path), "/monobus/%"PRIu8, app.prio);
 	if(!lv2_osc_writer_message_vararg(&writer, path, "iiiib",
-		app.xoff, app.yoff, width, height, len, app.bitmap))
+		app.xoff, app.yoff, width, height, len, bitmap))
 	{
 		syslog(LOG_ERR, "lv2_osc_writer_message_vararg");
 		goto failure;

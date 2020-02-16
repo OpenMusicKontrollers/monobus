@@ -33,10 +33,8 @@ extern "C" {
 #define STRIDE_SER (WIDTH_SER / 8)
 #define LENGTH_SER (STRIDE_SER * HEIGHT_SER)
 
-#define WIDTH_NET  112
-#define HEIGHT_NET 16
-#define STRIDE_NET (WIDTH_NET / 8)
-#define LENGTH_NET (STRIDE_NET * HEIGHT_NET)
+#define WIDTH_NET  (HEIGHT_SER)
+#define HEIGHT_NET (WIDTH_SER)
 
 typedef enum _command_type_t {
 	COMMAND_STATUS     = 0x80,

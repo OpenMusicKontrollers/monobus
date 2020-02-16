@@ -98,11 +98,12 @@ monobus_message(uint8_t *dst, size_t dst_len, uint8_t command, uint8_t id,
 }
 
 static bool
-_get_bit(const uint8_t *blob, unsigned y, unsigned x)
+_get_bit(const uint8_t *blob, unsigned y, unsigned x, unsigned width)
 {
-	x = WIDTH_NET - x - 1;
-	const unsigned row_offset = y * STRIDE_NET;
-	const unsigned col_offset = STRIDE_NET - (x / 8) - 1;
+	x = width - x - 1;
+	const unsigned stride = width / 8;
+	const unsigned row_offset = y * stride;
+	const unsigned col_offset = stride - (x / 8) - 1;
 	const uint8_t byte = blob[row_offset + col_offset];
 	const uint8_t mask = 1 << (x % 8);
 
@@ -130,7 +131,7 @@ _set_pixels(state_t *state, uint8_t prio, unsigned offx, unsigned offy,
 
 			pixel->mask |= mask;
 
-			if(_get_bit(blob, y, x))
+			if(_get_bit(blob, y, x, width))
 			{
 				pixel->bits |= mask;
 			}
@@ -212,7 +213,7 @@ _priority (LV2_OSC_Reader *reader, LV2_OSC_Arg *arg, const LV2_OSC_Tree *tree,
 			} break;
 			case LV2_OSC_BLOB:
 			{
-				const int32_t tot_len = width*height/sizeof(uint8_t);
+				const int32_t tot_len = width * height / 8;
 
 				if(arg->size >= tot_len)
 				{
