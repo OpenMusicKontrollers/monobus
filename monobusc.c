@@ -37,6 +37,7 @@ struct _app_t {
 	uint8_t prio;
 	const char *url;
 	const char *path;
+	bool clr;
 
 	LV2_OSC_Stream stream;
 
@@ -194,7 +195,7 @@ main(int argc, char **argv)
 		argv[0]);
 
 	int c;
-	while( (c = getopt(argc, argv, "vhdP:X:Y:U:I:") ) != -1)
+	while( (c = getopt(argc, argv, "vhdP:X:Y:U:I:C") ) != -1)
 	{
 		switch(c)
 		{
@@ -230,6 +231,10 @@ main(int argc, char **argv)
 			{
 				app.path = optarg;
 			} break;
+			case 'C':
+			{
+				app.clr = true;
+			} break;
 
 			case '?':
 			{
@@ -256,36 +261,6 @@ main(int argc, char **argv)
 	openlog(NULL, LOG_PERROR, LOG_DAEMON);
 	setlogmask(LOG_UPTO(logp));
 
-	if(strcmp(app.path, "-"))
-	{
-		fin = fopen(app.path, "rb");
-	}
-
-	if(!fin)
-	{
-		syslog(LOG_ERR, "[%s] '%s'", __func__, strerror(errno));
-		return -1;
-	}
-
-	pbm_init(&argc, argv);
-	pbm_readpbminit(fin, &width, &height, &format);
-
-	const int32_t len = width * height / 8;
-	uint8_t *bitmap = alloca(len);
-	if(!bitmap)
-	{
-		syslog(LOG_ERR, "[%s] 'out of memory'", __func__);
-		fclose(fin);
-		return -1;
-	}
-
-	pbm_readpbmrow_packed(fin, bitmap, width*height, format);
-
-	if(fin != stdin)
-	{
-		fclose(fin);
-	}
-
 	if(_osc_init(&app) == -1)
 	{
 		return -1;
@@ -306,11 +281,54 @@ main(int argc, char **argv)
 
 	char path [32];
 	snprintf(path, sizeof(path), "/monobus/%"PRIu8, app.prio);
-	if(!lv2_osc_writer_message_vararg(&writer, path, "iiiib",
-		app.xoff, app.yoff, (int32_t)width, (int32_t)height, len, bitmap))
+
+	if(app.clr)
 	{
-		syslog(LOG_ERR, "lv2_osc_writer_message_vararg");
-		goto failure;
+		if(!lv2_osc_writer_message_vararg(&writer, path, ""))
+		{
+			syslog(LOG_ERR, "lv2_osc_writer_message_vararg");
+			goto failure;
+		}
+	}
+	else
+	{
+		if(strcmp(app.path, "-"))
+		{
+			fin = fopen(app.path, "rb");
+		}
+
+		if(!fin)
+		{
+			syslog(LOG_ERR, "[%s] '%s'", __func__, strerror(errno));
+			return -1;
+		}
+
+		pbm_init(&argc, argv);
+		pbm_readpbminit(fin, &width, &height, &format);
+
+		const int32_t len = width * height / 8;
+		uint8_t *bitmap = alloca(len);
+		if(!bitmap)
+		{
+			syslog(LOG_ERR, "[%s] 'out of memory'", __func__);
+			fclose(fin);
+			return -1;
+		}
+
+		pbm_readpbmrow_packed(fin, bitmap, width*height, format);
+
+		if(fin != stdin)
+		{
+			fclose(fin);
+		}
+
+
+		if(!lv2_osc_writer_message_vararg(&writer, path, "iiiib",
+			app.xoff, app.yoff, (int32_t)width, (int32_t)height, len, bitmap))
+		{
+			syslog(LOG_ERR, "lv2_osc_writer_message_vararg");
+			goto failure;
+		}
 	}
 
 	if(!lv2_osc_writer_finalize(&writer, &written))
