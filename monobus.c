@@ -113,19 +113,21 @@ _get_bit(const uint8_t *blob, unsigned y, unsigned x, unsigned width)
 #define MAX(A, B) ( (A) > (B) ? (B) : (A) )
 
 static void
-_set_pixels(state_t *state, uint8_t prio, unsigned offx, unsigned offy,
-	unsigned width, unsigned height, const uint8_t *blob)
+_set_pixels(state_t *state, uint8_t prio, int32_t offx, int32_t offy,
+	int32_t width, int32_t height, const uint8_t *blob)
 {
 	const uint32_t mask = (1 << prio);
 
-	const unsigned maxy = MAX(height, HEIGHT_NET - offy);
-	const unsigned maxx = MAX(width, WIDTH_NET - offx);
+	const int32_t y0 = offy < 0 ? -offy : 0;
+	const int32_t x0 = offx < 0 ? -offx : 0;
+	const int32_t maxy = MAX(height, HEIGHT_NET - offy);
+	const int32_t maxx = MAX(width, WIDTH_NET - offx);
 
-	for(unsigned y = 0; y < maxy; y++)
+	for(int32_t y = y0; y < maxy; y++)
 	{
 		pixel_t *row = state->pixels[offy + y];
 
-		for(unsigned x = 0; x < maxx; x++)
+		for(int32_t x = x0; x < maxx; x++)
 		{
 			pixel_t *pixel = &row[offx + x];
 
@@ -144,19 +146,21 @@ _set_pixels(state_t *state, uint8_t prio, unsigned offx, unsigned offy,
 }
 
 static void
-_clr_pixels(state_t *state, uint8_t prio, unsigned offx, unsigned offy,
-	unsigned width, unsigned height)
+_clr_pixels(state_t *state, uint8_t prio, int32_t offx, int32_t offy,
+	int32_t width, int32_t height)
 {
 	const uint32_t mask = (1 << prio);
 
-	const unsigned maxy = MAX(height, HEIGHT_NET - offy);
-	const unsigned maxx = MAX(width, WIDTH_NET - offx);
+	const int32_t y0 = offy < 0 ? -offy : 0;
+	const int32_t x0 = offx < 0 ? -offx : 0;
+	const int32_t maxy = MAX(height, HEIGHT_NET - offy);
+	const int32_t maxx = MAX(width, WIDTH_NET - offx);
 
-	for(unsigned y = 0; y < maxy; y++)
+	for(int32_t y = y0; y < maxy; y++)
 	{
 		pixel_t *row = state->pixels[offy + y];
 
-		for(unsigned x = 0; x < maxx; x++)
+		for(int32_t x = x0; x < maxx; x++)
 		{
 			pixel_t *pixel = &row[offx + x];
 

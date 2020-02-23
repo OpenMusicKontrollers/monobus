@@ -32,8 +32,8 @@
 typedef struct _app_t app_t;
 
 struct _app_t {
-	uint8_t xoff;
-	uint8_t yoff;
+	int32_t xoff;
+	int32_t yoff;
 	uint8_t prio;
 	const char *url;
 	const char *path;
@@ -307,7 +307,7 @@ main(int argc, char **argv)
 	char path [32];
 	snprintf(path, sizeof(path), "/monobus/%"PRIu8, app.prio);
 	if(!lv2_osc_writer_message_vararg(&writer, path, "iiiib",
-		app.xoff, app.yoff, width, height, len, bitmap))
+		app.xoff, app.yoff, (int32_t)width, (int32_t)height, len, bitmap))
 	{
 		syslog(LOG_ERR, "lv2_osc_writer_message_vararg");
 		goto failure;
