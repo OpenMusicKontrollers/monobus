@@ -1,0 +1,69 @@
+#!/bin/bash
+
+set -e
+set -u
+
+ip="${1:-localhost}"
+export url="osc.udp://${ip}:7777"
+
+border()
+{
+	local width=56
+	local height=16
+	local i
+	local j
+
+	echo -e "P1\n${width} ${height}\n"
+	for j in $( seq 1 ${height} ); do
+		for i in $( seq 1 ${width} ); do
+			if [ ${i} -eq 1 ] || [ ${i} -eq ${width} ]; then
+				echo -e '1 '
+			elif [ ${j} -eq 1 ] || [ ${j} -eq ${height} ]; then
+				echo -e '1 '
+			else
+				echo -e '0 '
+			fi
+
+			echo -e '\n'
+		done
+	done
+}
+
+export -f border
+
+txt2pbm()
+{
+	local pointwidth=8
+	local pointsize=16
+	local style=b
+	local width=54
+	local height=14
+
+	convert \
+		-size ${width}x${height} \
+		-font "/usr/share/fonts/misc/Tamsyn${pointwidth}x${pointsize}${style}.pcf" \
+		-pointsize ${pointsize} \
+		-gravity center \
+		-interline-spacing '-2' \
+		caption:"${1:-MonoBus}" \
+		pbm:
+}
+
+export -f txt2pbm
+
+render()
+{
+	txt2pbm "$( date +'%H:%M' )"
+}
+
+export -f render
+
+animate()
+{
+	render | monobusc -P 1 -X 1 -Y 1 -U ${url}
+}
+
+export -f animate
+
+border | monobusc -P 0 -X 0 -Y 0 -U ${url}
+exec watch -n 1 animate

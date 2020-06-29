@@ -306,7 +306,8 @@ main(int argc, char **argv)
 		pbm_init(&argc, argv);
 		pbm_readpbminit(fin, &width, &height, &format);
 
-		const int32_t len = width * height / 8;
+		const unsigned stride = monobus_stride_for_width(width);
+		const unsigned len = stride * height;
 		uint8_t *bitmap = alloca(len);
 		if(!bitmap)
 		{
@@ -315,6 +316,7 @@ main(int argc, char **argv)
 			return -1;
 		}
 
+		memset(bitmap, 0x0, len);
 		pbm_readpbmrow_packed(fin, bitmap, width*height, format);
 
 		if(fin != stdin)

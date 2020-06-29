@@ -46,7 +46,7 @@ executable('monobusd',
 	install : true)
 
 executable('monobusc',
-	[ 'monobusc.c' ],
+	[ 'monobusc.c', 'monobus.c' ],
 	include_directories : incs,
 	dependencies : [lv2_dep, netpbm_dep],
 	install : true)

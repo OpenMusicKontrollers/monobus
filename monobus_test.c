@@ -212,12 +212,38 @@ _test_crc8()
 	}
 }
 
+static void
+_test_stride()
+{
+	assert(monobus_stride_for_width(0) == 0);
+	assert(monobus_stride_for_width(1) == 1);
+	assert(monobus_stride_for_width(2) == 1);
+	assert(monobus_stride_for_width(3) == 1);
+	assert(monobus_stride_for_width(4) == 1);
+	assert(monobus_stride_for_width(5) == 1);
+	assert(monobus_stride_for_width(6) == 1);
+	assert(monobus_stride_for_width(7) == 1);
+	assert(monobus_stride_for_width(8) == 1);
+
+	assert(monobus_stride_for_width(9) == 2);
+	assert(monobus_stride_for_width(10) == 2);
+	assert(monobus_stride_for_width(11) == 2);
+	assert(monobus_stride_for_width(12) == 2);
+	assert(monobus_stride_for_width(13) == 2);
+	assert(monobus_stride_for_width(14) == 2);
+	assert(monobus_stride_for_width(15) == 2
+			);
+	assert(monobus_stride_for_width(16) == 2);
+	assert(monobus_stride_for_width(17) == 3);
+}
+
 int
 main(int argc __attribute__((unused)), char **argv __attribute__((unused)))
 {
 	(void)lv2_osc_hooks; //FIXME
 	_test_parse();
 	_test_crc8();
+	_test_stride();
 
 	return 0;
 }
