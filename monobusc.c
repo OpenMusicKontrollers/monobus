@@ -166,6 +166,7 @@ _usage(char **argv, app_t *app)
 		"   [-Y] Y_OFSET             set y-offset of bitmap (%"PRIu8")\n"
 		"   [-U] URI                 OSC URI (%s)\n"
 		"   [-I] FILE                Bitmap in PBM format (%s)\n"
+		"   [-C]                     clear whole bitmap with given priority\n"
 		, argv[0], app->xoff, app->yoff, app->prio, app->url, app->path);
 }
 
