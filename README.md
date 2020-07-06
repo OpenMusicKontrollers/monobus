@@ -53,6 +53,7 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 	meson build
 	cd build
 	ninja
+	ninja test
 	sudo ninja install
 
 ### Usage
@@ -83,22 +84,36 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 		-F 2 \                        # update rate in frames per second
 		-U osc.udp://:7777            # OSC server URI
 
-#### Run monobus client with a 16x112 pixel pbm image
+#### Run monobus client with a 112x16 pixel pbm image at offset (2, 3)
 
 	monobusc \
-		-U osc.udp://localhost:7777   # OSC server URI
+		-P 11  \                      # priority level 11
+		-X 2 \                        # put image data at x-offset 2
+		-Y 3 \                        # put image data at x-offset 3
+		-W 112 \                      # image data width
+		-H 16 \                       # image data height
+		-U osc.udp://localhost:7777 \ # OSC server URI
 		-I bitmap.pbm                 # Bitmap in PBM format
 
 #### Control monobusd with your favorite OSC client
 
-
-##### **/monobus/PRIO b BITMAP-DATA**
+##### **/monobus/PRIO ,iiiib BITMAP-DATA**
 
 To set the bitmap, send your OSC messages to given OSC path with
-**PRIO** 0-31 and **b**lob argument being your bitmap data in PBM payload format.
+**PRIO** 0-31 **i**nteger x-offset, **i**nteger y-offset, **i**nteger width,
+**i**nteger height and **b**lob argument being your bitmap data in PBM payload
+format.
 
-	# set bitmap
-	oscsend osc.udp://localhost:7777 /monobus/0 b 224 ...
+	# set bitmap of size 112x16 at offset position (8,12) for priority level 11
+	osc.udp://localhost:7777 /monobus/11 ,iiiib 8 12 112 16 {...}
+
+##### **/monobus/PRIO ,
+
+To clear the bitmap, send your empty OSC messages to given OSC path with
+**PRIO** 0-31.
+
+	# clear whole bitmap for priority level 11
+	osc.udp://localhost:7777 /monobus/11 iiiib 8 12 112 16 {...}
 
 ### License
 
