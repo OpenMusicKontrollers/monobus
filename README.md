@@ -95,6 +95,13 @@ For GNU/Linux (64-bit, 32-bit, armv7, aarch64).
 		-U osc.udp://localhost:7777 \ # OSC server URI
 		-I bitmap.pbm                 # Bitmap in PBM format
 
+#### Run monobus client to clear image at priority level 11
+
+	monobusc \
+		-P 11  \                      # priority level 11
+		-C \                          # clear image data
+		-U osc.udp://localhost:7777   # OSC server URI
+
 #### Control monobusd with your favorite OSC client
 
 ##### **/monobus/PRIO ,iiiib BITMAP-DATA**
@@ -113,11 +120,11 @@ To clear the bitmap, send your empty OSC messages to given OSC path with
 **PRIO** 0-31.
 
 	# clear whole bitmap for priority level 11
-	osc.udp://localhost:7777 /monobus/11 iiiib 8 12 112 16 {...}
+	osc.udp://localhost:7777 /monobus/11 ,
 
 ### License
 
-Copyright (c) 2019 Hanspeter Portner (dev@open-music-kontrollers.ch)
+Copyright (c) 2019-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)
 
 This is free software: you can redistribute it and/or modify
 it under the terms of the Artistic License 2.0 as published by
