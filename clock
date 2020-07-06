@@ -4,7 +4,10 @@ set -e
 set -u
 
 ip="${1:-localhost}"
-export url="osc.udp://${ip}:7777"
+export url="osc.udp://[${ip}]:7777"
+export off_p=0
+export off_x=0
+export off_y=0
 
 border()
 {
@@ -60,10 +63,14 @@ export -f render
 
 animate()
 {
-	render | monobusc -P 1 -X 1 -Y 1 -U ${url}
+	render | monobusc -P $(( off_p + 1)) -X $(( off_x + 1 )) -Y $(( off_y + 1 )) -U ${url}
 }
 
 export -f animate
 
-border | monobusc -P 0 -X 0 -Y 0 -U ${url}
+# clear target priority levels 0/1
+monobusc -C -P $(( off_p + 0)) -U ${url}
+monobusc -C -P $(( off_p + 1 )) -U ${url}
+
+border | monobusc -P $(( off_p + 0 )) -X $(( off_x  + 0 )) -Y $(( off_y + 0 )) -U ${url}
 exec watch -n 1 animate
